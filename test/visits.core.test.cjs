@@ -48,15 +48,15 @@ test('valores SQL separados y límites de página estables', () => {
 });
 test('respuesta de S08 diferencia 9 clientes de 13 registros', () => {
   const data = [
-    ['0005005069', 2], ['0005005070', 1], ['0005005073', 2], ['0005005074', 1],
-    ['0005007173', 2], ['0005007887', 1], ['0005007889', 2], ['0005009398', 1], ['0008000040', 1],
+    ['DEMO001', 2], ['DEMO002', 1], ['DEMO003', 2], ['DEMO004', 1],
+    ['DEMO005', 2], ['DEMO006', 1], ['DEMO007', 2], ['DEMO008', 1], ['DEMO009', 1],
   ].map(([ClientCode, VisitRecords]) => ({ TotalClients: 9, TotalVisitRecords: 13, ClientCode, VisitRecords }));
   const result = buildVisitsResponse(query(), data, '2026-11-02T20:00:00Z');
   assert.equal(result.totalClients, 9);
   assert.equal(result.totalVisitRecords, 13);
   assert.equal(result.clients.length, 9);
   assert.equal(result.clients.reduce((sum, c) => sum + c.visitRecords, 0), 13);
-  assert.equal(result.clients[0].clientCode, '0005005069');
+  assert.equal(result.clients[0].clientCode, 'DEMO001');
   assert.equal(result.pagination.hasNextPage, false);
 });
 test('página vacía conserva totales sin fabricar un cliente NULL', () => {

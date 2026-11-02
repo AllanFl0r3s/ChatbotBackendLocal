@@ -56,13 +56,13 @@ describe('GET /visits/clients', () => {
     expect(sql.query).not.toHaveBeenCalled();
   });
   it('usa prodConnection con parámetros y diferencia clientes/registros', async () => {
-    sql.query.mockResolvedValue([{ TotalClients: 9, TotalVisitRecords: 13, ClientCode: '0005005069', VisitRecords: 2 }]);
+    sql.query.mockResolvedValue([{ TotalClients: 9, TotalVisitRecords: 13, ClientCode: 'DEMO001', VisitRecords: 2 }]);
     const result = await request(app.getHttpServer()).get('/visits/clients?route=S08&date=2026-11-02&pageSize=1')
       .set('Authorization', `Bearer ${token}`).expect(200);
     expect(sql.query).toHaveBeenCalledWith(VISITED_CLIENTS_SQL, ['S08', '2026-11-02', 0, 1]);
     expect(result.body.totalClients).toBe(9);
     expect(result.body.totalVisitRecords).toBe(13);
-    expect(result.body.clients[0].clientCode).toBe('0005005069');
+    expect(result.body.clients[0].clientCode).toBe('DEMO001');
     expect(result.body.pagination.hasNextPage).toBe(true);
   });
   it('no transforma fallos SQL en una lista de cero visitas', async () => {

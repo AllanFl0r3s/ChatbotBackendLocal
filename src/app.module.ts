@@ -15,6 +15,8 @@ import { RolesModule } from './roles/roles.module';
 
 import { ChatModule } from './chat/chat.module';
 import { PerfilModule } from './perfil/perfil.module';
+// Primera consulta de visitas: módulo independiente del chat y de OpenAI.
+import { VisitsModule } from './visits/visits.module';
 
 @Module({
   imports: [
@@ -191,6 +193,7 @@ import { PerfilModule } from './perfil/perfil.module';
     AuthModule,
     ChatModule,
     PerfilModule,
+    VisitsModule,
   ],
 
   controllers: [AppController],

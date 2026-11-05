@@ -14,7 +14,7 @@ export class VisitsController {
   @Get('clients')
   @ApiOperation({ summary: 'Clientes con registros de visita por ruta y fecha' })
   @ApiQuery({ name: 'route', required: true, example: 'S08' })
-  @ApiQuery({ name: 'date', required: true, example: '2026-11-02' })
+  @ApiQuery({ name: 'date', required: true, example: '2026-11-05', description: 'Fecha local de Honduras, AAAA-MM-DD' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'pageSize', required: false, example: 50 })
   listClients(@Req() req: any, @Query() query: Record<string, unknown>) {

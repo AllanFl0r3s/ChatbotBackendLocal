@@ -6,7 +6,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import {
   authorizeVisitsRoute, buildVisitsResponse, parseVisitsQuery,
-  VISITED_CLIENTS_SQL, visitsSqlParameters, VisitsAccessError, VisitsInputError,
+  visitedClientsSql, visitsSqlParameters, VisitsAccessError, VisitsInputError,
 } from './visits.core';
 import type { VisitsDbRow } from './visits.core';
 
@@ -23,20 +23,24 @@ export class VisitsService {
 
   async listClients(userId: number, rawQuery: Record<string, unknown>) {
     let query: ReturnType<typeof parseVisitsQuery>;
+    let sql: string;
     try {
       query = parseVisitsQuery(rawQuery);
       // Asignación explícita en el servidor hasta definir integración con PACO.
       // Sin configuración, ninguna cuenta tiene acceso, tampoco el administrador.
       authorizeVisitsRoute(userId, query.route, this.config.get<string>('VISITS_ROUTE_ACCESS') ?? '{}');
+      // Este repositorio es el backend académico: por defecto consulta academico.*.
+      // El modo legacy solo se habilita explícitamente desde el servidor.
+      sql = visitedClientsSql(this.config.get<string>('VISITS_DATA_SOURCE') ?? 'academic');
     } catch (error) {
       if (error instanceof VisitsInputError) throw new BadRequestException(error.message);
       if (error instanceof VisitsAccessError) throw new ForbiddenException(error.message);
-      throw new ServiceUnavailableException('El acceso a visitas aún no está configurado correctamente.');
+      throw new ServiceUnavailableException('La consulta de visitas no está configurada correctamente.');
     }
 
     try {
       const rows: VisitsDbRow[] = await this.dataSource.query(
-        VISITED_CLIENTS_SQL, visitsSqlParameters(query),
+        sql, visitsSqlParameters(query),
       );
       return buildVisitsResponse(query, rows, new Date().toISOString());
     } catch {

@@ -25,7 +25,7 @@ describe('GET /visits/clients', () => {
       providers: [
         VisitsService, JwtStrategy,
         { provide: ConfigService, useValue: new ConfigService({
-          JWT_SECRET: secret, VISITS_ROUTE_ACCESS: '{"12":["S08"]}',
+          JWT_SECRET: secret, VISITS_ROUTE_ACCESS: '{"12":["S08"]}', VISITS_DATA_SOURCE: 'legacy',
         }) },
         { provide: getDataSourceToken('prodConnection'), useValue: sql },
       ],

@@ -92,6 +92,40 @@ LEFT JOIN Numbered AS n
 ORDER BY n.RowNumber;
 `;
 
+// Fuente propia de la demostración. No se une ClienteRuta porque sus períodos
+// podrían multiplicar visitas: cada registro pertenece a un cliente y una ruta.
+// FechaHora es UTC; la fecha pedida por el usuario es la de Honduras (UTC-6).
+export const ACADEMIC_VISITED_CLIENTS_SQL = `
+WITH Clients AS (
+  SELECT c.Codigo AS ClientCode, COUNT(*) AS VisitRecords
+  FROM [academico].[Visitas] AS v
+  INNER JOIN [academico].[Clientes] AS c ON c.Id = v.ClienteId
+  INNER JOIN [academico].[Rutas] AS r ON r.Id = v.RutaId
+  WHERE r.Codigo = @0
+    AND CONVERT(date, DATEADD(hour, -6, v.FechaHora)) = CAST(@1 AS date)
+  GROUP BY c.Codigo
+), Numbered AS (
+  SELECT ClientCode, VisitRecords,
+    ROW_NUMBER() OVER (ORDER BY ClientCode) AS RowNumber
+  FROM Clients
+), Totals AS (
+  SELECT COUNT(*) AS TotalClients,
+    COALESCE(SUM(VisitRecords), 0) AS TotalVisitRecords
+  FROM Clients
+)
+SELECT t.TotalClients, t.TotalVisitRecords, n.ClientCode, n.VisitRecords
+FROM Totals AS t
+LEFT JOIN Numbered AS n ON n.RowNumber > @2 AND n.RowNumber <= @3
+ORDER BY n.RowNumber;
+`;
+
+export function visitedClientsSql(source: string = 'academic'): string {
+  // Lista cerrada de consultas: la URL nunca decide una tabla ni envía SQL.
+  if (source === 'academic') return ACADEMIC_VISITED_CLIENTS_SQL;
+  if (source === 'legacy') return VISITED_CLIENTS_SQL;
+  throw new VisitsConfigurationError('VISITS_DATA_SOURCE debe ser academic o legacy.');
+}
+
 export function visitsSqlParameters(query: VisitsQuery): [string, string, number, number] {
   const offset = (query.page - 1) * query.pageSize;
   return [query.route, query.date, offset, offset + query.pageSize];
@@ -117,7 +151,7 @@ export function buildVisitsResponse(query: VisitsQuery, rows: VisitsDbRow[], que
       totalPages: Math.ceil(totalClients / query.pageSize),
       hasNextPage: query.page * query.pageSize < totalClients,
     },
-    // Este instante es de consulta; no conocemos la fecha de sincronización de APP_RV.
+    // Este instante es de consulta, no una fecha de sincronización de los datos.
     queriedAt,
     description: 'Clientes con registros de visita. No acredita venta ni visita completada.',
   };

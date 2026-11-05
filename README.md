@@ -9,7 +9,7 @@ se encuentra en [docs/backend-original.md](docs/backend-original.md).
 - Dos bases locales: CHATBOT para usuarios, roles, sesiones, mensajes y perfil;
   DW_ISTMA para clientes, programación y registros ficticios de visitas.
 - Login JWT con el usuario de demostración.
-- GET /visits/clients: consulta por ruta y fecha, clientes distintos, registros y paginación.
+- GET /visits/clients: consulta las tablas academico por ruta y fecha de Honduras; conserva clientes distintos, registros y paginación. VISITS_DATA_SOURCE=legacy permite usar la fuente anterior explícitamente.
 - Los datos de ejemplo de S08 tienen 9 clientes y 13 registros en su fecha de creación.
 
 Todavía no se han recreado las fuentes locales de stock, ventas, proyecciones,
@@ -120,3 +120,11 @@ Validación local del 02/11/2026: compilación correcta y 15 pruebas automatizad
 aprobadas. Se inició temporalmente el backend en 3021 contra ambas bases locales:
 login correcto, visitas S08 con HTTP 200 (9 clientes/13 registros con códigos DEMO),
 ruta sin asignación con HTTP 403 y solicitud sin token con HTTP 401.
+
+## Integración académica de visitas (5 de noviembre de 2026)
+
+La fuente predeterminada ahora es academico.Visitas. Requiere la migración y semilla
+versionadas en database del repositorio Frontend-Chatbot. Fecha de la semilla:
+2026-11-05. La pantalla del frontend está en /visits. Configuración, resultados de
+pruebas y limitaciones: [docs/visitas.md](docs/visitas.md). Las funciones heredadas
+de inventario y otras consultas del chat todavía no se adaptaron a las tablas nuevas.

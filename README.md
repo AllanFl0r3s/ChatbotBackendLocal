@@ -147,3 +147,7 @@ existentes: no hay que recrear las bases. El 6 de noviembre se aprobaron 42 prue
 y 8 comprobaciones HTTP contra SQL local real. Las credenciales de demostración
 se guardaron fuera de los repositorios. Recuperación, invalidación de sesiones
 y despliegue público siguen pendientes. Guía: docs/registro.md del frontend.
+
+## Recuperación académica · avance 18
+
+Flujo implementado con API de correo pendiente de configurar. Ver [guía](docs/recuperacion-contrasena.md). No se modificó el .env privado. Los JWT anteriores a este avance requieren volver a iniciar sesión. Pruebas: 69 aprobadas; cambio de contraseña y revocación comprobados con SQL local y transporte de correo sustituido. No se envió correo real ni se cambió ninguna contraseña de las cuentas existentes.

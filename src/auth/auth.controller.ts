@@ -1,5 +1,8 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, UseGuards, ValidationPipe } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-recovery.dto';
+import { PasswordRecoveryService } from './password-recovery.service';
+import { RecoveryRateGuard } from './guards/recovery-rate.guard';
 import { AuthService } from './auth.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
@@ -10,7 +13,24 @@ import { RegisterPayloadGuard } from './guards/register-payload.guard';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService,
+    private readonly recovery: PasswordRecoveryService) {}
+
+  @Post('forgot-password')
+  @HttpCode(200)
+  @UseGuards(RecoveryRateGuard)
+  @ApiOperation({ summary: 'Solicitar enlace de recuperación por correo (15 minutos)' })
+  forgot(@Body(new ValidationPipe({ transform: true, whitelist: true })) dto: ForgotPasswordDto) {
+    return this.recovery.forgot(dto.email);
+  }
+
+  @Post('reset-password')
+  @HttpCode(200)
+  @UseGuards(RecoveryRateGuard)
+  @ApiOperation({ summary: 'Cambiar contraseña con enlace de recuperación de un solo uso' })
+  reset(@Body(new ValidationPipe({ transform: true, whitelist: true })) dto: ResetPasswordDto) {
+    return this.recovery.reset(dto.token, dto.password);
+  }
 
   @Post('login')
   @ApiOperation({ summary: 'Login with Email and password' })

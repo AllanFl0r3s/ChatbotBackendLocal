@@ -5,6 +5,9 @@ import { PassportModule } from '@nestjs/passport';
 import { getDataSourceToken } from '@nestjs/typeorm';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { User } from '../users/user.entity';
+import { credentialVersion } from '../auth/credential-version';
 import { JwtStrategy } from '../auth/jwt.strategy';
 import { VisitsController } from './visits.controller';
 import { VisitsService } from './visits.service';
@@ -24,6 +27,10 @@ describe('GET /visits/clients', () => {
       controllers: [VisitsController],
       providers: [
         VisitsService, JwtStrategy,
+        { provide: getRepositoryToken(User), useValue: { findOne: async ({where}: any) => ({
+          id: where.id, usuario: 'fixture', passwordHash: 'fixture-hash', estado: true,
+          roleId: where.id === 1 || where.id === 13 ? 1 : 2, role: { estado: true },
+        }) } },
         { provide: ConfigService, useValue: new ConfigService({
           JWT_SECRET: secret, VISITS_ROUTE_ACCESS: '{"12":["S08"]}', VISITS_DATA_SOURCE: 'legacy',
         }) },
@@ -33,8 +40,8 @@ describe('GET /visits/clients', () => {
     app = module.createNestApplication();
     await app.init();
     const jwt = module.get(JwtService);
-    token = jwt.sign({ sub: 12, username: 'test', roleId: 2 });
-    unassignedToken = jwt.sign({ sub: 13, username: 'other', roleId: 1 });
+    token = jwt.sign({ purpose: 'access', credentialVersion: credentialVersion('fixture-hash', secret), sub: 12, username: 'test', roleId: 2 });
+    unassignedToken = jwt.sign({ purpose: 'access', credentialVersion: credentialVersion('fixture-hash', secret), sub: 13, username: 'other', roleId: 1 });
   });
   beforeEach(() => sql.query.mockReset());
   afterAll(async () => { await app?.close(); });

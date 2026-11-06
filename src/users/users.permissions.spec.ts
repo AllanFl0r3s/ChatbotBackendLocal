@@ -5,6 +5,9 @@ import { PassportModule } from '@nestjs/passport';
 import { ValidationPipe } from '@nestjs/common';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { User } from '../users/user.entity';
+import { credentialVersion } from '../auth/credential-version';
 import { JwtStrategy } from '../auth/jwt.strategy';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { UsersController } from './users.controller';
@@ -32,7 +35,11 @@ describe('Permisos HTTP de administración de usuarios', () => {
       imports: [PassportModule, JwtModule.register({ secret })],
       controllers: [UsersController],
       providers: [
-        JwtStrategy, AdminGuard,
+        JwtStrategy,
+        { provide: getRepositoryToken(User), useValue: { findOne: async ({where}: any) => ({
+          id: where.id, usuario: 'fixture', passwordHash: 'fixture-hash', estado: true,
+          roleId: where.id === 1 || where.id === 13 ? 1 : 2, role: { estado: true },
+        }) } }, AdminGuard,
         { provide: ConfigService, useValue: new ConfigService({ JWT_SECRET: secret }) },
         { provide: UsersService, useValue: services },
       ],
@@ -41,9 +48,9 @@ describe('Permisos HTTP de administración de usuarios', () => {
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     await app.init();
     const jwt = module.get(JwtService);
-    adminToken = jwt.sign({ sub: 1, roleId: 1 });
-    userToken = jwt.sign({ sub: 2, roleId: 2 });
-    expiredToken = jwt.sign({ sub: 1, roleId: 1 }, { expiresIn: -1 });
+    adminToken = jwt.sign({ purpose: 'access', credentialVersion: credentialVersion('fixture-hash', secret), sub: 1, roleId: 1 });
+    userToken = jwt.sign({ purpose: 'access', credentialVersion: credentialVersion('fixture-hash', secret), sub: 2, roleId: 2 });
+    expiredToken = jwt.sign({ purpose: 'access', credentialVersion: credentialVersion('fixture-hash', secret), sub: 1, roleId: 1 }, { expiresIn: -1 });
   });
   beforeEach(() => jest.clearAllMocks());
   afterAll(async () => { await app?.close(); });

@@ -8,6 +8,7 @@ import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import * as bcrypt from 'bcrypt';
 import { AuthController } from './auth.controller';
+import { PasswordRecoveryService } from './password-recovery.service';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { RegisterPayloadGuard } from './guards/register-payload.guard';
@@ -26,7 +27,7 @@ describe('Registro público: validación, rol fijo y login posterior', () => {
     email: '  PERSONA@example.invalid  ', password: 'UnaClaveDePrueba-2026!' };
   const lookup = { where: jest.fn().mockReturnThis(), orWhere: jest.fn().mockReturnThis(),
     leftJoinAndSelect: jest.fn().mockReturnThis(), getOne: jest.fn() };
-  const users = { createQueryBuilder: jest.fn(), create: jest.fn(), save: jest.fn() };
+  const users = { findOne: jest.fn(() => lookup.getOne()), createQueryBuilder: jest.fn(), create: jest.fn(), save: jest.fn() };
   const roles = { findOne: jest.fn() };
   const adminServices = { findAll: jest.fn().mockResolvedValue([]) };
 
@@ -36,6 +37,7 @@ describe('Registro público: validación, rol fijo y login posterior', () => {
       imports: [PassportModule, JwtModule.register({ secret })],
       controllers: [AuthController, UsersController],
       providers: [AuthService, JwtStrategy, AdminGuard, RegisterPayloadGuard,
+        { provide: PasswordRecoveryService, useValue: {} },
         { provide: ConfigService, useValue: new ConfigService({ JWT_SECRET: secret }) },
         { provide: getRepositoryToken(User), useValue: users },
         { provide: getRepositoryToken(Role), useValue: roles },

@@ -1,4 +1,6 @@
 import { Injectable, UnauthorizedException, ForbiddenException, ConflictException, HttpException, ServiceUnavailableException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { credentialVersion } from './credential-version';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
@@ -17,6 +19,7 @@ export class AuthService {
     private readonly usersRepository: Repository<User>,
     private readonly jwtService: JwtService,
     @InjectRepository(Role) private readonly rolesRepository: Repository<Role>,
+    private readonly config: ConfigService,
   ) {}
 
   private toResponse(user: User) {
@@ -70,6 +73,8 @@ export class AuthService {
 
     const payload = {
       sub: user.id,
+      purpose: 'access',
+      credentialVersion: credentialVersion(user.passwordHash, this.config.getOrThrow<string>('JWT_SECRET')),
       email: user.email,
       usuario: user.usuario,
       roleId: user.roleId,

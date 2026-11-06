@@ -6,6 +6,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../users/user.entity';
 import { Role } from '../roles/role.entity';
 import { RegisterPayloadGuard } from './guards/register-payload.guard';
+import { PasswordRecoveryService } from './password-recovery.service';
+import { RecoveryMailService } from './recovery-mail.service';
+import { RecoveryRateGuard } from './guards/recovery-rate.guard';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
@@ -45,6 +48,6 @@ import { JwtStrategy } from './jwt.strategy';
     TypeOrmModule.forFeature([User, Role]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, RegisterPayloadGuard],
+  providers: [AuthService, JwtStrategy, RegisterPayloadGuard, PasswordRecoveryService, RecoveryMailService, RecoveryRateGuard],
 })
 export class AuthModule {}

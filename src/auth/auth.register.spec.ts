@@ -1,3 +1,4 @@
+import { AuthSessionsService } from './auth-sessions.service';
 import { Test } from '@nestjs/testing';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -34,9 +35,11 @@ describe('Registro público: validación, rol fijo y login posterior', () => {
   beforeAll(async () => {
     const secret = 'registration-tests-only-not-a-real-secret';
     const module = await Test.createTestingModule({
-      imports: [PassportModule, JwtModule.register({ secret })],
+      imports: [PassportModule, JwtModule.register({ secret, signOptions: { expiresIn: 3600 } })],
       controllers: [AuthController, UsersController],
-      providers: [AuthService, JwtStrategy, AdminGuard, RegisterPayloadGuard,
+      providers: [
+        { provide: AuthSessionsService, useValue: { open: jest.fn().mockResolvedValue(undefined),
+          assertActive: jest.fn().mockResolvedValue(undefined), revoke: jest.fn().mockResolvedValue(undefined) } },AuthService, JwtStrategy, AdminGuard, RegisterPayloadGuard,
         { provide: PasswordRecoveryService, useValue: {} },
         { provide: ConfigService, useValue: new ConfigService({ JWT_SECRET: secret }) },
         { provide: getRepositoryToken(User), useValue: users },

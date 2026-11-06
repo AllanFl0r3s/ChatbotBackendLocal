@@ -58,7 +58,7 @@ Después de configurar, reiniciar **el backend**. No reiniciar SQL ni ejecutar m
 - Límite local por proceso: 3 intentos por correo y 20 por IP del socket en 15 minutos. Correos se representan con SHA-256 en la memoria del limitador; tamaño acotado y limpieza al expirar. Se reinicia con el proceso. Detrás de un proxy puede compartirse la IP; antes de ampliar instancias necesita almacenamiento compartido y una política explícita de proxies. No se confía en X-Forwarded-For arbitrario.
 - El envío es síncrono. Los fallos del proveedor producen 503; los tiempos y fallos requieren mayor protección contra enumeración para una publicación expuesta a abuso. No se presenta esta implementación académica como certificación de seguridad de producción.
 - Los JWT emitidos antes del avance 18 no tienen propósito/huella y se rechazan: volver a iniciar sesión una vez. Se revalida usuario, rol activo y permisos actuales en cada petición protegida; no se aceptan privilegios antiguos del token.
-- Logout todavía solo limpia el navegador. Invalidar una sesión concreta en servidor sigue pendiente y es distinto de revocar todas las sesiones por cambio de contraseña.
+- El avance 20 implementa logout individual persistido; ver sesiones-y-logout.md. Es distinto de revocar todas las sesiones por cambio de contraseña.
 - Proveedor, recepción y login con contraseña nueva confirmados localmente por el autor. Falta repetir manualmente los rechazos, publicar backend/base por HTTPS y preparar release semana-4. No marcar la entrega como finalizada.
 
 ## Fuentes y archivos

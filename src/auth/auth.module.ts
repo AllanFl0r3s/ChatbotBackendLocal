@@ -9,6 +9,8 @@ import { RegisterPayloadGuard } from './guards/register-payload.guard';
 import { PasswordRecoveryService } from './password-recovery.service';
 import { RecoveryMailService } from './recovery-mail.service';
 import { RecoveryRateGuard } from './guards/recovery-rate.guard';
+import { AuthSessionsService } from './auth-sessions.service';
+import { Sesion } from '../chat/entities/sesion.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
@@ -45,9 +47,9 @@ import { JwtStrategy } from './jwt.strategy';
         };
       },
     }),
-    TypeOrmModule.forFeature([User, Role]),
+    TypeOrmModule.forFeature([User, Role, Sesion]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, RegisterPayloadGuard, PasswordRecoveryService, RecoveryMailService, RecoveryRateGuard],
+  providers: [AuthSessionsService, AuthService, JwtStrategy, RegisterPayloadGuard, PasswordRecoveryService, RecoveryMailService, RecoveryRateGuard],
 })
 export class AuthModule {}

@@ -1,3 +1,4 @@
+import { AuthSessionsService } from '../auth/auth-sessions.service';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
@@ -32,9 +33,11 @@ describe('Permisos HTTP de administración de usuarios', () => {
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
-      imports: [PassportModule, JwtModule.register({ secret })],
+      imports: [PassportModule, JwtModule.register({ secret, signOptions: { expiresIn: 3600 } })],
       controllers: [UsersController],
       providers: [
+        { provide: AuthSessionsService, useValue: { open: jest.fn().mockResolvedValue(undefined),
+          assertActive: jest.fn().mockResolvedValue(undefined), revoke: jest.fn().mockResolvedValue(undefined) } },
         JwtStrategy,
         { provide: getRepositoryToken(User), useValue: { findOne: async ({where}: any) => ({
           id: where.id, usuario: 'fixture', passwordHash: 'fixture-hash', estado: true,
@@ -48,9 +51,9 @@ describe('Permisos HTTP de administración de usuarios', () => {
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     await app.init();
     const jwt = module.get(JwtService);
-    adminToken = jwt.sign({ purpose: 'access', credentialVersion: credentialVersion('fixture-hash', secret), sub: 1, roleId: 1 });
-    userToken = jwt.sign({ purpose: 'access', credentialVersion: credentialVersion('fixture-hash', secret), sub: 2, roleId: 2 });
-    expiredToken = jwt.sign({ purpose: 'access', credentialVersion: credentialVersion('fixture-hash', secret), sub: 1, roleId: 1 }, { expiresIn: -1 });
+    adminToken = jwt.sign({ sid: '00000000-0000-4000-8000-000000000001', purpose: 'access', credentialVersion: credentialVersion('fixture-hash', secret), sub: 1, roleId: 1 });
+    userToken = jwt.sign({ sid: '00000000-0000-4000-8000-000000000001', purpose: 'access', credentialVersion: credentialVersion('fixture-hash', secret), sub: 2, roleId: 2 });
+    expiredToken = jwt.sign({ sid: '00000000-0000-4000-8000-000000000001', purpose: 'access', credentialVersion: credentialVersion('fixture-hash', secret), sub: 1, roleId: 1 }, { expiresIn: -1 });
   });
   beforeEach(() => jest.clearAllMocks());
   afterAll(async () => { await app?.close(); });

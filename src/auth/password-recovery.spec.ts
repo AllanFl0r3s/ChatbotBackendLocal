@@ -1,3 +1,4 @@
+import { AuthSessionsService } from './auth-sessions.service';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
@@ -42,9 +43,11 @@ describe('Recuperación HTTP: enlace firmado y cambio atómico, sin correo real'
   };
   beforeAll(async () => {
     const module = await Test.createTestingModule({
-      imports: [PassportModule, JwtModule.register({ secret })],
+      imports: [PassportModule, JwtModule.register({ secret, signOptions: { expiresIn: 3600 } })],
       controllers: [AuthController, UsersController],
-      providers: [AuthService, JwtStrategy, PasswordRecoveryService, RecoveryRateGuard, AdminGuard,
+      providers: [
+        { provide: AuthSessionsService, useValue: { open: jest.fn().mockResolvedValue(undefined),
+          assertActive: jest.fn().mockResolvedValue(undefined), revoke: jest.fn().mockResolvedValue(undefined) } },AuthService, JwtStrategy, PasswordRecoveryService, RecoveryRateGuard, AdminGuard,
         { provide: ConfigService, useValue: new ConfigService({ JWT_SECRET: secret }) },
         { provide: RecoveryMailService, useValue: mail },
         { provide: getRepositoryToken(User), useValue: users },

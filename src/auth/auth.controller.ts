@@ -1,8 +1,10 @@
-import { Body, Controller, HttpCode, Post, UseGuards, ValidationPipe } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, HttpCode, Post, Req, UseGuards, ValidationPipe } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-recovery.dto';
 import { PasswordRecoveryService } from './password-recovery.service';
 import { RecoveryRateGuard } from './guards/recovery-rate.guard';
+import { AuthSessionsService } from './auth-sessions.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
 import { AuthService } from './auth.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
@@ -14,7 +16,20 @@ import { RegisterPayloadGuard } from './guards/register-payload.guard';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService,
-    private readonly recovery: PasswordRecoveryService) {}
+    private readonly recovery: PasswordRecoveryService,
+    private readonly sessions: AuthSessionsService) {}
+
+  @Post('logout')
+  @HttpCode(204)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Invalidar únicamente la sesión autenticada actual' })
+  @ApiResponse({ status: 204, description: 'Sesión invalidada en SQL' })
+  @ApiResponse({ status: 401, description: 'Sesión inválida, vencida o cerrada' })
+  @ApiResponse({ status: 503, description: 'No se pudo confirmar el cierre' })
+  async logout(@Req() request: { user: { userId: number; sessionId: string; expiresAt: number } }) {
+    await this.sessions.revoke(request.user.userId, request.user.sessionId, request.user.expiresAt);
+  }
 
   @Post('forgot-password')
   @HttpCode(200)
@@ -34,7 +49,7 @@ export class AuthController {
 
   @Post('login')
   @ApiOperation({ summary: 'Login with Email and password' })
-  @ApiResponse({ status: 200, type: AuthResponseDto })
+  @ApiResponse({ status: 201, type: AuthResponseDto })
   async login(@Body() dto: LoginDto): Promise<AuthResponseDto> {
     return this.authService.login(dto);
   }

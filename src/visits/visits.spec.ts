@@ -1,3 +1,4 @@
+import { AuthSessionsService } from '../auth/auth-sessions.service';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
@@ -23,9 +24,11 @@ describe('GET /visits/clients', () => {
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
-      imports: [PassportModule, JwtModule.register({ secret })],
+      imports: [PassportModule, JwtModule.register({ secret, signOptions: { expiresIn: 3600 } })],
       controllers: [VisitsController],
       providers: [
+        { provide: AuthSessionsService, useValue: { open: jest.fn().mockResolvedValue(undefined),
+          assertActive: jest.fn().mockResolvedValue(undefined), revoke: jest.fn().mockResolvedValue(undefined) } },
         VisitsService, JwtStrategy,
         { provide: getRepositoryToken(User), useValue: { findOne: async ({where}: any) => ({
           id: where.id, usuario: 'fixture', passwordHash: 'fixture-hash', estado: true,
@@ -40,8 +43,8 @@ describe('GET /visits/clients', () => {
     app = module.createNestApplication();
     await app.init();
     const jwt = module.get(JwtService);
-    token = jwt.sign({ purpose: 'access', credentialVersion: credentialVersion('fixture-hash', secret), sub: 12, username: 'test', roleId: 2 });
-    unassignedToken = jwt.sign({ purpose: 'access', credentialVersion: credentialVersion('fixture-hash', secret), sub: 13, username: 'other', roleId: 1 });
+    token = jwt.sign({ sid: '00000000-0000-4000-8000-000000000001', purpose: 'access', credentialVersion: credentialVersion('fixture-hash', secret), sub: 12, username: 'test', roleId: 2 });
+    unassignedToken = jwt.sign({ sid: '00000000-0000-4000-8000-000000000001', purpose: 'access', credentialVersion: credentialVersion('fixture-hash', secret), sub: 13, username: 'other', roleId: 1 });
   });
   beforeEach(() => sql.query.mockReset());
   afterAll(async () => { await app?.close(); });

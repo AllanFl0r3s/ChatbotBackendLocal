@@ -1,4 +1,6 @@
 import { Injectable, UnauthorizedException, ForbiddenException, ConflictException, HttpException, ServiceUnavailableException } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
+import { AuthSessionsService } from './auth-sessions.service';
 import { ConfigService } from '@nestjs/config';
 import { credentialVersion } from './credential-version';
 import { JwtService } from '@nestjs/jwt';
@@ -20,6 +22,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     @InjectRepository(Role) private readonly rolesRepository: Repository<Role>,
     private readonly config: ConfigService,
+    private readonly sessions: AuthSessionsService,
   ) {}
 
   private toResponse(user: User) {
@@ -71,7 +74,9 @@ export class AuthService {
   async login(dto: LoginDto): Promise<AuthResponseDto> {
     const user = await this.validateUser(dto.identifier, dto.password);
 
+    const sessionId = randomUUID();
     const payload = {
+      sid: sessionId,
       sub: user.id,
       purpose: 'access',
       credentialVersion: credentialVersion(user.passwordHash, this.config.getOrThrow<string>('JWT_SECRET')),
@@ -80,10 +85,11 @@ export class AuthService {
       roleId: user.roleId,
     };
 
-    return {
-      accessToken: this.jwtService.sign(payload),
-      user: this.toResponse(user),
-    };
+    const accessToken = this.jwtService.sign(payload);
+    const expiresAt = this.jwtService.decode<{ exp: number }>(accessToken)?.exp;
+    if (!Number.isSafeInteger(expiresAt)) throw new ServiceUnavailableException('Configura la caducidad de sesión.');
+    await this.sessions.open(user.id, sessionId, expiresAt);
+    return { accessToken, user: this.toResponse(user) };
   }
 
   async register(dto: RegisterDto): Promise<RegisterResponseDto> {

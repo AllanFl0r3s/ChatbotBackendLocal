@@ -9,8 +9,8 @@ Fecha: 6 de noviembre de 2026. Implementado en los repositorios académicos loca
 - 69 pruebas del backend aprobadas en 5 suites: 27 nuevas y 42 de regresión.
 - 10 comprobaciones con la aplicación completa y SQL local: cuenta temporal, login, solicitud, cambio persistido, enlace usado rechazado, contraseña y JWT antiguos rechazados, nuevo login con permisos preservados, administrador preservado y limpieza de la cuenta temporal.
 - Compilaciones de backend, frontend desarrollo/SSR y preview correctas. Los avisos de tamaño CSS heredados de preview continúan.
-- El transporte de correo se sustituyó en las pruebas: **no se envió un correo real**. La cuenta de Brevo y sus credenciales no están configuradas. La integración devuelve 503 si falta configuración; no muestra un éxito inventado.
-- Las nuevas pantallas necesitan comprobación manual con un correo recibido. Vercel sigue siendo solo una vista previa.
+- Las pruebas automáticas usaron transporte sustituido. Posteriormente se configuró Brevo en el .env privado, se verificó el remitente y el autor confirmó la recepción real del correo, el cambio desde el enlace y el login con la contraseña nueva. La integración sigue devolviendo 503 si falta configuración.
+- Las pantallas de solicitud y cambio se comprobaron manualmente con un correo recibido. El rechazo de la contraseña anterior y del enlace reutilizado tiene prueba automática/local SQL; su repetición manual no fue confirmada todavía. Vercel sigue siendo solo una vista previa.
 
 ## Cómo funciona
 
@@ -23,7 +23,7 @@ Fecha: 6 de noviembre de 2026. Implementado en los repositorios académicos loca
 
 ## Configurar el correo sin subir secretos
 
-El autor todavía no tiene una cuenta de correo transaccional. Crear una cuenta gratuita en [Brevo](https://www.brevo.com/), verificar el correo y configurar un remitente según los requisitos vigentes de la cuenta. Puede ser necesario autenticar un dominio o conseguir la activación transaccional; no se presume aprobada la entrega. No contratar planes ni comprar dominios sin revisar antes el presupuesto cero.
+La instalación local ya tiene proveedor y remitente configurados en privado. Para reproducirla en otra instalación, crear una cuenta gratuita en [Brevo](https://www.brevo.com/), verificar el correo y configurar un remitente según los requisitos vigentes de la cuenta. Puede ser necesario autenticar un dominio o conseguir la activación transaccional; no se presume aprobada la entrega. No contratar planes ni comprar dominios sin revisar antes el presupuesto cero.
 
 Crear una clave API de Brevo y guardarla **solo en el .env privado del backend**. Completar estas variables (también aparecen vacías en .env.example):
 
@@ -44,7 +44,7 @@ No compartir claves, enlaces ni capturas del .env. PASSWORD_RESET_SECRET debe di
 
 Después de configurar, reiniciar **el backend**. No reiniciar SQL ni ejecutar migraciones: este cambio usa las tablas actuales. El frontend debe seguir iniciado desde su propia carpeta.
 
-## Prueba manual pendiente
+## Prueba manual y comprobaciones restantes
 
 1. Usar una cuenta propia con un correo real que controle el autor. Las direcciones example.invalid de demostración no reciben mensajes.
 2. Abrir /forgot-password y pedir el enlace. Revisar bandeja y spam, además del estado de entrega en Brevo. La aceptación de la API no garantiza recepción.
@@ -59,7 +59,7 @@ Después de configurar, reiniciar **el backend**. No reiniciar SQL ni ejecutar m
 - El envío es síncrono. Los fallos del proveedor producen 503; los tiempos y fallos requieren mayor protección contra enumeración para una publicación expuesta a abuso. No se presenta esta implementación académica como certificación de seguridad de producción.
 - Los JWT emitidos antes del avance 18 no tienen propósito/huella y se rechazan: volver a iniciar sesión una vez. Se revalida usuario, rol activo y permisos actuales en cada petición protegida; no se aceptan privilegios antiguos del token.
 - Logout todavía solo limpia el navegador. Invalidar una sesión concreta en servidor sigue pendiente y es distinto de revocar todas las sesiones por cambio de contraseña.
-- Falta configurar proveedor, recibir correo real, probar la interfaz, publicar backend/base por HTTPS y preparar release semana-4. No marcar la entrega como finalizada.
+- Proveedor, recepción y login con contraseña nueva confirmados localmente por el autor. Falta repetir manualmente los rechazos, publicar backend/base por HTTPS y preparar release semana-4. No marcar la entrega como finalizada.
 
 ## Fuentes y archivos
 

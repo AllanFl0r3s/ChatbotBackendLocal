@@ -151,3 +151,5 @@ y despliegue público siguen pendientes. Guía: docs/registro.md del frontend.
 ## Recuperación académica · avance 18
 
 Flujo implementado con API de correo pendiente de configurar. Ver [guía](docs/recuperacion-contrasena.md). No se modificó el .env privado. Los JWT anteriores a este avance requieren volver a iniciar sesión. Pruebas: 69 aprobadas; cambio de contraseña y revocación comprobados con SQL local y transporte de correo sustituido. No se envió correo real ni se cambió ninguna contraseña de las cuentas existentes.
+
+Confirmación manual posterior (6 de noviembre de 2026): proveedor y remitente configurados en privado; el autor recibió el correo, cambió su contraseña desde el enlace e inició sesión con la nueva. La prueba es local y no acredita un despliegue público. Las credenciales permanecen fuera de Git.

@@ -128,3 +128,12 @@ versionadas en database del repositorio Frontend-Chatbot. Fecha de la semilla:
 2026-11-05. La pantalla del frontend está en /visits. Configuración, resultados de
 pruebas y limitaciones: [docs/visitas.md](docs/visitas.md). Las funciones heredadas
 de inventario y otras consultas del chat todavía no se adaptaron a las tablas nuevas.
+
+## Semana 4: primer control de roles
+
+Los cinco endpoints /users requieren JWT y administrador en el servidor. Angular
+no es el límite de seguridad. El 6 de noviembre de 2026 se compiló el backend y
+pasaron 20 pruebas en users.permissions.spec.ts, visits.academic.spec.ts y
+visits.spec.ts (persistencia simulada). Registro público, recuperación y logout
+con invalidación en servidor siguen pendientes. La matriz y el estado del avance
+están en docs/permisos.md y docs/bitacora/semana-4.md del repositorio Frontend-Chatbot.

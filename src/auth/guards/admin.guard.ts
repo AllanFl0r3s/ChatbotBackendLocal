@@ -13,7 +13,7 @@ export class AdminGuard implements CanActivate {
 
     if (!user || user.roleId !== 1) {
       throw new ForbiddenException(
-        'Solo el administrador puede administrar roles',
+        'Esta acción requiere el rol administrador',
       );
     }
 

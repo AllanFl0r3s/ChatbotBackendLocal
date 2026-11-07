@@ -67,6 +67,9 @@ import { VisitsModule } from './visits/visits.module';
 
           autoLoadEntities: true,
 
+          // Liberar conexiones inactivas ayuda a la pausa de Azure SQL serverless.
+          pool: { max: 5, min: 0, idleTimeoutMillis: 30000 },
+
           logging:
             configService.get<string>('DB_LOGGING') === 'true',
 
@@ -160,6 +163,8 @@ import { VisitsModule } from './visits/visits.module';
           synchronize: false,
 
           autoLoadEntities: false,
+
+          pool: { max: 5, min: 0, idleTimeoutMillis: 30000 },
 
           logging: false,
 

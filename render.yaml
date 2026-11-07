@@ -1,0 +1,70 @@
+# Blueprint opcional. Los secretos se introducen en Render y nunca en Git.
+services:
+  - type: web
+    name: chatbot-backend-academico
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /health
+    autoDeployTrigger: 'off'
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: NODE_ENV
+        value: production
+      - key: CORS_ORIGINS
+        value: https://chatbot-clase-vista-previa.vercel.app
+      - key: FRONTEND_URL
+        value: https://chatbot-clase-vista-previa.vercel.app
+      - key: DB_HOST
+        value: sql-chatbot-allanflores-2026.database.windows.net
+      - key: DB_PORT
+        value: '1433'
+      - key: DB_NAME
+        value: CHATBOT
+      - key: DB_SCHEMA
+        value: dbo
+      - key: DB_USER
+        value: chatbot_web
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_ENCRYPT
+        value: 'true'
+      - key: DB_TRUST_SERVER_CERTIFICATE
+        value: 'false'
+      - key: PROD_DB_HOST
+        value: sql-chatbot-allanflores-2026.database.windows.net
+      - key: PROD_DB_PORT
+        value: '1433'
+      - key: PROD_DB_NAME
+        value: DW_ISTMA
+      - key: PROD_DB_SCHEMA
+        value: dbo
+      - key: PROD_DB_USER
+        value: chatbot_web
+      - key: PROD_DB_PASSWORD
+        sync: false
+      - key: PROD_DB_ENCRYPT
+        value: 'true'
+      - key: PROD_DB_TRUST_SERVER_CERTIFICATE
+        value: 'false'
+      - key: VISITS_DATA_SOURCE
+        value: academic
+      - key: VISITS_ROUTE_ACCESS
+        value: '{}'
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PASSWORD_RESET_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION
+        value: 1h
+      - key: SWAGGER_ENABLED
+        value: 'false'
+      # Inicializa el SDK, pero NO habilita IA ni consume una cuenta de OpenAI.
+      - key: OPENAI_API_KEY
+        value: academic-demo-no-openai-requests
+      - key: BREVO_API_KEY
+        sync: false
+      - key: RECOVERY_FROM_EMAIL
+        sync: false

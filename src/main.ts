@@ -2,8 +2,11 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { deploymentConfig } from './deployment.config';
 
 async function bootstrap() {
+  // Validar antes de que Nest abra las conexiones de las dos bases.
+  const deployment = deploymentConfig(process.env);
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(
@@ -13,12 +16,10 @@ async function bootstrap() {
     }),
   );
 
-  // CORS abierto para pruebas
+  // Solo el frontend autorizado recibe cabeceras CORS. No concede permisos de usuario.
   app.enableCors({
-    origin: true,
+    origin: deployment.origins,
   });
-
-  console.log('CORS habilitado para todas las conexiones');
 
   const config = new DocumentBuilder()
     .setTitle('Manda API')
@@ -27,8 +28,11 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  // Swagger sigue disponible localmente; se desactiva por defecto en producción.
+  if (deployment.swagger) {
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api', app, document);
+  }
 
   // ESCUCHAR EN RED
   await app.listen(process.env.PORT ?? 3020, '0.0.0.0');

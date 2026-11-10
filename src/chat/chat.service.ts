@@ -670,7 +670,35 @@ const selected = promoCtx.items[localIndex];
       nextFlowId: pasoActual.id,
       };
     }
-const nav = this.readNavigationCtx(sesion);
+    // Primero respetar el paso guiado: tras elegir stock, "Quartz" es un
+    // nombre para inventario, no una búsqueda genérica en fuentes de ventas.
+    const navigationReply = await this.handleNavigationFlow(sesion, pasoActual, raw);
+    if (navigationReply) return navigationReply;
+
+    // Las selecciones de listados y submenús ya se atendieron arriba.
+    // Un número del menú principal se resuelve localmente ANTES de llamar a IA.
+    const globalMenuOption = extractSimpleMenuOption(raw, 6);
+    if (globalMenuOption) {
+      switch (globalMenuOption) {
+        case 1:
+          return this.resolveReplyFromDb(sesion, 'stock');
+        case 2:
+          return {
+            reply:
+              'Para consultar detalle de pedido, escribe el número de pedido.\n\n' +
+              'Ejemplo: detalle del pedido 001008854',
+            nextFlowId: pasoActual.id,
+          };
+        case 3:
+          return this.resolveReplyFromDb(sesion, 'ventas');
+        case 4:
+          return this.resolveReplyFromDb(sesion, 'proyeccion');
+        case 5:
+          return this.resolveReplyFromDb(sesion, 'notas de credito');
+        case 6:
+          return this.resolveReplyFromDb(sesion, 'promociones');
+      }
+    }
 
     // 7) Si escribió solo un nombre de producto, ofrecer menú corto
 const onlyDigits = /^\d+$/.test(raw);
@@ -976,40 +1004,7 @@ const hits = allHits.slice(0, pageSize);
       };
     }
 
-    // 9) Flujo guiado por navegación (ANTES de clasificar intención)
-    const navigationReply = await this.handleNavigationFlow(
-      sesion,
-      pasoActual,
-      raw,
-    );
-    if (navigationReply) {
-      return navigationReply;
-    }
-
-  // 10) Opciones directas antes de OpenAI
-  const rawMenu = raw
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-
-  let intent: any;
-
-if (
-  rawMenu === '6' ||
-  rawMenu === 'promocion' ||
-  rawMenu === 'promociones' ||
-  rawMenu === 'promo' ||
-  rawMenu === 'promos'
-) {
-  intent = {
-    intent: 'promocion',
-    promoFiltro: null,
-  };
-} else {
-  intent = (await this.openAi.classifyIntent(raw)) as any;
-}
-
+// El submenú de ventas también es navegación local, no clasificación con IA.
 const rawVentasMenu = normalizeGuidedOption(raw);
 
 
@@ -1036,39 +1031,14 @@ if (onlyVentas) {
   };
 }
 
-    const globalMenuOption = extractSimpleMenuOption(raw, 6);
-
-if (globalMenuOption) {
-  switch (globalMenuOption) {
-    case 1:
-      return this.resolveReplyFromDb(sesion, 'stock');
-
-    case 2:
-    return {
-    reply:
-      'Para consultar detalle de pedido, escribe el número de pedido.\n\n' +
-      'Ejemplo: detalle del pedido 001008854',
-    nextFlowId: pasoActual.id,
-    };
-
-    case 3:
-      return this.resolveReplyFromDb(sesion, 'ventas');
-
-    case 4:
-      return this.resolveReplyFromDb(sesion, 'proyeccion');
-
-    case 5:
-      return this.resolveReplyFromDb(sesion, 'notas de credito');
-
-    case 6:
-    intent.intent = 'promocion';
-    intent.promoFiltro = null;
-    break;
-
-    default:
-      break;
+  // Solo las consultas que no resolvió el contexto llegan al clasificador.
+  const rawMenu = normalizeGuidedOption(raw);
+  let intent: any;
+  if (['promocion', 'promociones', 'promo', 'promos'].includes(rawMenu)) {
+    intent = { intent: 'promocion', promoFiltro: null };
+  } else {
+    intent = (await this.openAi.classifyIntent(raw)) as any;
   }
-}
     // Corrección local para notas de crédito por cliente
 const rawNc = (raw ?? '')
   .toString()
@@ -5169,7 +5139,9 @@ if (ctx.source === 'VENTAS_CATEGORIA') {
     }
 
     // Si parece SKU, buscar directo por SKU
-    if (looksLikeSku(input) && isAllowedSkuValue(input)) {
+    // "Quartz" y "Plata" son nombres. Los códigos S4/demo de esta fuente
+    // contienen dígitos; no buscar un nombre de marca como si fuera su SKU.
+    if (looksLikeSku(input) && /\d/.test(input) && isAllowedSkuValue(input)) {
       const detail =
         await this.inventoryService.findStockDetalleByCodigoS4(input);
 

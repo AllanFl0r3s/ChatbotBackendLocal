@@ -64,6 +64,8 @@ services:
       # Inicializa el SDK, pero NO habilita IA ni consume una cuenta de OpenAI.
       - key: OPENAI_API_KEY
         value: academic-demo-no-openai-requests
+      - key: OPENAI_ENABLED
+        value: 'false'
       - key: BREVO_API_KEY
         sync: false
       - key: RECOVERY_FROM_EMAIL

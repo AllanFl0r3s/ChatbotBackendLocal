@@ -86,7 +86,10 @@ type VentasCategoriaCtx = {
 
   type VentasMenuCtx = {
   mode?: 'VENTAS_MENU';
-  step?: 'ASK_OPTION' | 'ASK_PRODUCT' | 'ASK_VENDOR';
+  step?: 'ASK_OPTION' | 'ASK_PRODUCT' | 'ASK_VENDOR' | 'ASK_VENDOR_SELECT' | 'ASK_VENDOR_PERIOD' | 'ASK_VENDOR_MONTH_YEAR';
+  vendorId?: string;
+  vendorName?: string;
+  vendors?: VendedorRow[];
 };
 
 type VentasProductoCtx = {
@@ -220,6 +223,7 @@ type NavigationCtx = {
   mode?: 'NAVIGATION';
   source?:
     | 'MENU'
+    | 'PEDIDO'
     | 'STOCK'
     | 'VENTAS'
     | 'VENTAS_CATEGORIA'
@@ -232,6 +236,7 @@ type NavigationCtx = {
     | 'AWAITING_NEXT_ACTION'
     | 'AWAITING_PERIOD'
     | 'AWAITING_PRODUCT'
+    | 'AWAITING_ORDER'
     | 'AWAITING_CATEGORY'
     | 'AWAITING_VENDOR'
     | 'AWAITING_DATE_RANGE'
@@ -683,6 +688,10 @@ const selected = promoCtx.items[localIndex];
         case 1:
           return this.resolveReplyFromDb(sesion, 'stock');
         case 2:
+          await this.clearQueryContexts(sesion);
+          await this.writeNavigationCtx(sesion, {
+            mode: 'NAVIGATION', source: 'PEDIDO', step: 'AWAITING_ORDER',
+          });
           return {
             reply:
               'Para consultar detalle de pedido, escribe el número de pedido.\n\n' +
@@ -1097,6 +1106,13 @@ if (looksLikeNotasCliente) {
           nextFlowId: menu.id,
         };
       }
+
+      case 'catalogo':
+      case 'precio':
+        return {
+          reply: 'Esta demostración permite consultar stock, pedidos, ventas, proyecciones, notas de crédito y promociones. Escribe "menu" para elegir una opción.',
+          nextFlowId: pasoActual.id,
+        };
 
   case 'stock': {
   await this.clearQueryContexts(sesion);
@@ -2686,6 +2702,77 @@ private async handleVentasMenuFlow(
   const option = extractSimpleMenuOption(raw, 4);
   const t = normalizeGuidedOption(raw);
 
+  if (ctx.step === 'ASK_VENDOR' || ctx.step === 'ASK_VENDOR_SELECT') {
+    let vendors: VendedorRow[];
+    if (ctx.step === 'ASK_VENDOR_SELECT') {
+      const index = extractSimpleMenuOption(raw, ctx.vendors?.length ?? 0);
+      vendors = index
+        ? [ctx.vendors![index - 1]]
+        : (ctx.vendors ?? []).filter((v) => v.SLPRSNID === raw.trim().toUpperCase());
+    } else {
+      vendors = await this.salesService.findVendedores(raw, 5);
+    }
+    if (!vendors.length)
+      return {
+        reply: 'No encontré ese vendedor. Escribe su código o nombre, o "menu" para salir.',
+        nextFlowId: pasoActual.id,
+      };
+    if (vendors.length > 1) {
+      await this.writeVentasMenuCtx(sesion, { ...ctx, step: 'ASK_VENDOR_SELECT', vendors });
+      return {
+        reply: `Elige el vendedor:\n${vendors.map((v, i) => `${i + 1}) ${v.Nombre} (${v.SLPRSNID})`).join('\n')}`,
+        nextFlowId: pasoActual.id,
+      };
+    }
+    await this.writeVentasMenuCtx(sesion, {
+      mode: 'VENTAS_MENU',
+      step: 'ASK_VENDOR_PERIOD',
+      vendorId: vendors[0].SLPRSNID,
+      vendorName: vendors[0].Nombre,
+    });
+    return {
+      reply: `Vendedor: ${vendors[0].Nombre}\nIndica el período:\n1) Este mes\n2) Mes pasado\n3) Escribir mes y año\n4) Menú`,
+      nextFlowId: pasoActual.id,
+    };
+  }
+
+  if (ctx.step === 'ASK_VENDOR_PERIOD' || ctx.step === 'ASK_VENDOR_MONTH_YEAR') {
+    let period = parseMesAnioFromText(raw);
+    if (ctx.step === 'ASK_VENDOR_PERIOD') {
+      const now = new Date();
+      if (t === '1') period = { mes: now.getMonth() + 1, anio: now.getFullYear() };
+      if (t === '2') {
+        const previous = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        period = { mes: previous.getMonth() + 1, anio: previous.getFullYear() };
+      }
+      if (t === '3') {
+        await this.writeVentasMenuCtx(sesion, { ...ctx, step: 'ASK_VENDOR_MONTH_YEAR' });
+        return { reply: 'Escribe el mes y año. Ejemplo: noviembre 2026', nextFlowId: pasoActual.id };
+      }
+      if (t === '4' || t === '5') {
+        await this.clearAllContexts(sesion);
+        return { reply: this.MENU_PRINCIPAL, nextFlowId: pasoActual.id };
+      }
+    }
+    if (!period.mes || !period.anio)
+      return {
+        reply: 'Indica mes y año, por ejemplo noviembre 2026, o "menu" para salir.',
+        nextFlowId: pasoActual.id,
+      };
+    const sale = await this.salesService.getVentaNetaVendedorMes({
+      slprsnid: ctx.vendorId!,
+      mes: period.mes,
+      anio: period.anio,
+    });
+    await this.writeVentasMenuCtx(sesion, {});
+    return {
+      reply: sale
+        ? `Ventas del mes (Vendedor)\n${sale.Nombre} (${sale.SLPRSNID})\nPeríodo: ${getNombreMes(period.mes)} ${period.anio}\nVenta neta: ${formatLps(sale.VentaNeta)}`
+        : `No encontré ventas para ${ctx.vendorName} en ${getNombreMes(period.mes)} ${period.anio}.`,
+      nextFlowId: pasoActual.id,
+    };
+  }
+
   if (ctx.step === 'ASK_PRODUCT') {
   const term = raw.trim();
   const optionProducto = extractSimpleMenuOption(raw, 5);
@@ -3112,9 +3199,19 @@ private async runVentasProductoFlow(
       };
     }
 
+    const matches = await this.salesService.buscarCategorias(categoria, 6);
+    if (matches.length !== 1) {
+      return {
+        reply: matches.length
+          ? `Hay varias categorías. Escribe el nombre completo:\n${matches.map((c) => `- ${c.Categoria}`).join('\n')}`
+          : 'No encontré esa categoría. Escribe otra o "menu" para salir.',
+        nextFlowId: pasoActual.id,
+      };
+    }
+
     await this.writeVentasCategoriaCtx(sesion, {
       ...ctx,
-      categoria,
+      categoria: matches[0].Categoria,
       step: 'ASK_PERIOD',
     });
 
@@ -5115,6 +5212,26 @@ if (ctx.source === 'VENTAS_CATEGORIA') {
     }
 
     const text = normalizeGuidedOption(raw);
+
+    if (nav.source === 'PEDIDO' && nav.step === 'AWAITING_ORDER') {
+      const idPedido = raw.match(/^(?:(?:detalle (?:del )?)?pedido\s+)?(\d{6,15})$/i)?.[1];
+      if (!idPedido) {
+        return {
+          reply: 'Escribe un número de pedido de 6 a 15 dígitos, o "menu" para salir.',
+          nextFlowId: pasoActual.id,
+        };
+      }
+      await this.clearNavigationCtx(sesion);
+      try {
+        return await this.resolveReplyFromDb(sesion, `detalle del pedido ${idPedido}`);
+      } finally {
+        await this.writeNavigationCtx(sesion, {
+          mode: 'NAVIGATION',
+          source: 'PEDIDO',
+          step: 'AWAITING_ORDER',
+        });
+      }
+    }
 
     if (text === '5' || text === '4' || text === 'menu' || text === 'menú') {
       await this.clearNavigationCtx(sesion);

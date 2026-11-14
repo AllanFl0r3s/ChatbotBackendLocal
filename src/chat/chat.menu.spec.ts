@@ -30,6 +30,9 @@ describe('Chat: navegación numérica sin clasificador externo', () => {
     (ai as any).client.responses.create = externalCall;
 
     query = jest.fn(async (sql: string, params: any[] = []) => {
+      if (sql.includes('VWchatbot_PEDIDO_DETALLE_S4')) {
+        return params[0] === '0001001' ? [{ IdPedido: '0001001', Material: 'PT990000001', NombreMaterial: 'Quartz DEMO', Unidades: 24, UndMedida: 'UN' }] : [];
+      }
       if (sql.includes('VW_STOCK_S4_PRODUCTO_CENTRO')) {
         if (params[0] !== 'PT990000001') return [];
         return [
@@ -98,5 +101,71 @@ describe('Chat: navegación numérica sin clasificador externo', () => {
     expect(result.reply).toContain('¿Qué deseas consultar de ventas?');
     expect(externalCall).not.toHaveBeenCalled();
     expect(query).not.toHaveBeenCalled();
+  });
+
+  it('menu → 2 → número de pedido conserva ceros y permite consultar otro número', async () => {
+    await service.handleWebMessage(1, 'menu');
+    await service.handleWebMessage(1, '2');
+    const found = await service.handleWebMessage(1, '0001001');
+    expect(found.reply).toContain('Detalle del pedido 0001001');
+    expect(found.reply).toContain('24 UN');
+    const missing = await service.handleWebMessage(1, '9999999');
+    expect(missing.reply).toContain('No encontré el pedido 9999999');
+    expect(externalCall).not.toHaveBeenCalled();
+  });
+
+  it('un identificador inválido en pedidos pide corregirlo sin llamar al proveedor', async () => {
+    await service.handleWebMessage(1, 'menu');
+    await service.handleWebMessage(1, '2');
+    const invalid = await service.handleWebMessage(1, 'pedido incorrecto');
+    expect(invalid.reply).toContain('6 a 15 dígitos');
+    expect(query).not.toHaveBeenCalled();
+    expect(externalCall).not.toHaveBeenCalled();
+    const menu = await service.handleWebMessage(1, 'menu');
+    expect(menu.reply).toContain('Stock');
+  });
+
+  it('ventas por vendedor permite resolver coincidencias y elegir un mes explícito', async () => {
+    const sales = (service as any).salesService;
+    sales.findVendedores = jest.fn(async () => [
+      { SLPRSNID: 'DEMO01', Nombre: 'Vendedor DEMO Norte' },
+      { SLPRSNID: 'DEMO02', Nombre: 'Vendedor DEMO Sur' },
+    ]);
+    sales.getVentaNetaVendedorMes = jest.fn(async () => ({ SLPRSNID: 'DEMO02', Nombre: 'Vendedor DEMO Sur', VentaNeta: 666.60 }));
+    await service.handleWebMessage(1, 'menu');
+    await service.handleWebMessage(1, '3');
+    await service.handleWebMessage(1, '2');
+    expect((await service.handleWebMessage(1, 'DEMO')).reply).toContain('Elige el vendedor');
+    await service.handleWebMessage(1, '2');
+    await service.handleWebMessage(1, '3');
+    const result = await service.handleWebMessage(1, 'noviembre 2026');
+    expect(result.reply).toContain('666.60');
+    expect(sales.getVentaNetaVendedorMes).toHaveBeenCalledWith({ slprsnid: 'DEMO02', mes: 11, anio: 2026 });
+    expect(externalCall).not.toHaveBeenCalled();
+  });
+
+  it('una categoría parcial única usa el nombre real de la fuente', async () => {
+    const sales = (service as any).salesService;
+    sales.buscarCategorias = jest.fn(async () => [{ Categoria: 'Bebidas demo' }]);
+    sales.getVentasPorCategoria = jest.fn(async () => ({ Categoria: 'Bebidas demo', VentaNeta: 100 }));
+    await service.handleWebMessage(1, 'menu');
+    await service.handleWebMessage(1, '3');
+    await service.handleWebMessage(1, '3');
+    await service.handleWebMessage(1, '1');
+    await service.handleWebMessage(1, 'Bebidas');
+    await service.handleWebMessage(1, '3');
+    const result = await service.handleWebMessage(1, 'noviembre 2026');
+    expect(result.reply).toContain('Bebidas demo');
+    expect(sales.getVentasPorCategoria).toHaveBeenCalledWith(expect.objectContaining({ categoria: 'Bebidas demo', mes: 11, anio: 2026 }));
+    expect(externalCall).not.toHaveBeenCalled();
+  });
+
+  it('una frase no reconocida vuelve al menú sin usar una clave externa ficticia', async () => {
+    (service as any).salesService.findProductosByNombre = jest.fn(async () => []);
+    await service.handleWebMessage(1, 'menu');
+    const result = await service.handleWebMessage(1, 'necesito hablar sobre un tema desconocido');
+    expect(result.reply).toContain('No logré identificar');
+    expect(result.reply).toContain('Stock');
+    expect(externalCall).not.toHaveBeenCalled();
   });
 });

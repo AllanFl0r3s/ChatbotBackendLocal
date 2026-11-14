@@ -75,7 +75,7 @@ export class NotasCreditoService {
         FECHA_DOCUMENTO,
         TOTAL
       FROM ${this.notasCreditoView}
-      WHERE CLIENTE LIKE @0
+      WHERE CLIENTE COLLATE Latin1_General_CI_AI LIKE @0
          OR COD_CLIENTE = @1
       ORDER BY FECHA_DOCUMENTO DESC
       `,

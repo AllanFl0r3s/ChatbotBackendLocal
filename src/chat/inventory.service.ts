@@ -168,10 +168,10 @@ export class InventoryService {
         Nombre,
         StockTotal
       FROM dbo.VWchatbot_STOCK_S4_PRODUCTO
-      WHERE (@0 IS NULL OR Nombre LIKE '%' + @0 + '%')
-        AND (@1 IS NULL OR Nombre LIKE '%' + @1 + '%')
-        AND (@2 IS NULL OR Nombre LIKE '%' + @2 + '%')
-        AND (@3 IS NULL OR Nombre LIKE '%' + @3 + '%')
+      WHERE (@0 IS NULL OR Nombre COLLATE Latin1_General_CI_AI LIKE '%' + @0 + '%')
+        AND (@1 IS NULL OR Nombre COLLATE Latin1_General_CI_AI LIKE '%' + @1 + '%')
+        AND (@2 IS NULL OR Nombre COLLATE Latin1_General_CI_AI LIKE '%' + @2 + '%')
+        AND (@3 IS NULL OR Nombre COLLATE Latin1_General_CI_AI LIKE '%' + @3 + '%')
       ORDER BY Nombre
       `,
       [
@@ -252,10 +252,10 @@ export class InventoryService {
         Nombre,
         StockTotal
       FROM dbo.VWchatbot_STOCK_S4_PRODUCTO
-      WHERE (@0 IS NULL OR Nombre LIKE '%' + @0 + '%')
-        AND (@1 IS NULL OR Nombre LIKE '%' + @1 + '%')
-        AND (@2 IS NULL OR Nombre LIKE '%' + @2 + '%')
-        AND (@3 IS NULL OR Nombre LIKE '%' + @3 + '%')
+      WHERE (@0 IS NULL OR Nombre COLLATE Latin1_General_CI_AI LIKE '%' + @0 + '%')
+        AND (@1 IS NULL OR Nombre COLLATE Latin1_General_CI_AI LIKE '%' + @1 + '%')
+        AND (@2 IS NULL OR Nombre COLLATE Latin1_General_CI_AI LIKE '%' + @2 + '%')
+        AND (@3 IS NULL OR Nombre COLLATE Latin1_General_CI_AI LIKE '%' + @3 + '%')
       ORDER BY Nombre
       `,
       [
@@ -330,10 +330,10 @@ export class InventoryService {
         Nombre,
         StockTotal
       FROM dbo.VWchatbot_STOCK_S4_PRODUCTO
-      WHERE (@0 IS NULL OR Nombre LIKE '%' + @0 + '%')
-        AND (@1 IS NULL OR Nombre LIKE '%' + @1 + '%')
-        AND (@2 IS NULL OR Nombre LIKE '%' + @2 + '%')
-        AND (@3 IS NULL OR Nombre LIKE '%' + @3 + '%')
+      WHERE (@0 IS NULL OR Nombre COLLATE Latin1_General_CI_AI LIKE '%' + @0 + '%')
+        AND (@1 IS NULL OR Nombre COLLATE Latin1_General_CI_AI LIKE '%' + @1 + '%')
+        AND (@2 IS NULL OR Nombre COLLATE Latin1_General_CI_AI LIKE '%' + @2 + '%')
+        AND (@3 IS NULL OR Nombre COLLATE Latin1_General_CI_AI LIKE '%' + @3 + '%')
       ORDER BY Nombre
       `,
       [

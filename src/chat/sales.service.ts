@@ -167,7 +167,7 @@ export class SalesService {
         RTRIM(ITEMNMBR) AS SKU,
         RTRIM(ITEMDESC) AS NombreProducto
       FROM ${this.DW_DB}.[IV00101]
-      WHERE ITEMDESC LIKE '%' + @0 + '%'
+      WHERE ITEMDESC COLLATE Latin1_General_CI_AI LIKE '%' + @0 + '%'
         AND RTRIM(ITEMNMBR) LIKE '[A-Z]%'
       ORDER BY ITEMDESC
       `,
@@ -195,9 +195,9 @@ export class SalesService {
         RTRIM(ITEMNMBR) AS SKU,
         RTRIM(ITEMDESC) AS NombreProducto
       FROM ${this.DW_DB}.[IV00101]
-      WHERE ITEMDESC LIKE '%' + @0 + '%'
-        AND (@1 IS NULL OR ITEMDESC LIKE '%' + @1 + '%')
-        AND (@2 IS NULL OR ITEMDESC LIKE '%' + @2 + '%')
+      WHERE ITEMDESC COLLATE Latin1_General_CI_AI LIKE '%' + @0 + '%'
+        AND (@1 IS NULL OR ITEMDESC COLLATE Latin1_General_CI_AI LIKE '%' + @1 + '%')
+        AND (@2 IS NULL OR ITEMDESC COLLATE Latin1_General_CI_AI LIKE '%' + @2 + '%')
         AND RTRIM(ITEMNMBR) LIKE '[A-Z]%'
       ORDER BY ITEMDESC
       `,
@@ -254,7 +254,7 @@ export class SalesService {
         RTRIM(sprsnsln) AS Nombre
       FROM ${this.DW_DB}.[RM00301]
       WHERE RTRIM(slprsnid) = RTRIM(@0)
-         OR sprsnsln LIKE '%' + @1 + '%'
+         OR sprsnsln COLLATE Latin1_General_CI_AI LIKE '%' + @1 + '%'
       ORDER BY sprsnsln
       `,
       [termUpper, term],

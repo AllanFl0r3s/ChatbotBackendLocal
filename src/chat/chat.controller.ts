@@ -5,6 +5,7 @@ import {
   Req,
   UseGuards,
   BadRequestException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -39,6 +40,15 @@ export class ChatController {
       );
     }
 
-    return this.chatService.handleWebMessage(userId, text);
+    try {
+      return await this.chatService.handleWebMessage(userId, text);
+    } catch (error) {
+      if (error instanceof Error && error.name === 'QueryFailedError') {
+        throw new ServiceUnavailableException(
+          'No fue posible consultar los datos. Intenta de nuevo; si persiste, informa al administrador.',
+        );
+      }
+      throw error;
+    }
   }
 }

@@ -101,6 +101,13 @@ export class OpenAiService {
     const ventasCategoriaIntent = this.detectVentasCategoriaIntent(text);
     if (ventasCategoriaIntent) return ventasCategoriaIntent;
 
+    // El MVP académico funciona por reglas. Una frase no reconocida vuelve al
+    // menú sin enviar datos a un proveedor ni intentar usar la clave ficticia.
+    // La clasificación externa requiere activación explícita y clave propia.
+    if (this.config.get<string>('OPENAI_ENABLED') !== 'true') {
+      return this.emptyIntent('out_of_domain');
+    }
+
     // ============================
     // OPENAI STRUCTURED OUTPUT
     // ============================

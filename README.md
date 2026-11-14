@@ -6,6 +6,8 @@ se encuentra en [docs/backend-original.md](docs/backend-original.md).
 
 ## Estado de esta primera etapa
 
+> Actualización 14/11/2026: el menú completo ya tiene fuentes académicas y correcciones de navegación. La migración 004 está aplicada y verificada en SQL local y Azure; el código actualizado aún está pendiente de publicación en Render. Ver [menú académico](docs/menu-academico.md) para estado actual, ejemplos y límites. Los párrafos siguientes conservan el contexto de la primera etapa.
+
 - Dos bases locales: CHATBOT para usuarios, roles, sesiones, mensajes y perfil;
   DW_ISTMA para clientes, programación y registros ficticios de visitas.
 - Login JWT con el usuario de demostración.

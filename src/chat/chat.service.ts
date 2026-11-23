@@ -1,3 +1,5 @@
+import { SuggestionsService } from '../suggestions/suggestions.service';
+import { PurchaseHistoryService } from '../suggestions/purchase-history.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -280,7 +282,11 @@ export class ChatService {
     '3) Ventas\n' +
     '4) Proyecciones de venta\n' +
     '5) Notas de crédito\n' +
-    '6) Promociones';
+    '6) Promociones\n' +
+    '7) Cartera y vencimientos — pendiente\n' +
+    '8) Ruta y visitas — chat en desarrollo\n' +
+    '9) Promociones sugeridas por cliente\n' +
+    '10) Historial de compras por cliente';
 
     private readonly MENU_OPCIONES =
   'Escribe lo que deseas consultar\n' +
@@ -290,7 +296,11 @@ export class ChatService {
   '3) Ventas\n' +
   '4) Proyecciones de venta\n' +
   '5) Notas de crédito\n' +
-  '6) Promociones';
+  '6) Promociones\n' +
+    '7) Cartera y vencimientos — pendiente\n' +
+    '8) Ruta y visitas — chat en desarrollo\n' +
+    '9) Promociones sugeridas por cliente\n' +
+    '10) Historial de compras por cliente';
 
   constructor(
     @InjectRepository(Sesion) private readonly sesionRepo: Repository<Sesion>,
@@ -300,6 +310,8 @@ export class ChatService {
     private readonly inventoryService: InventoryService,
     private readonly salesService: SalesService,
     private readonly notasCreditoService: NotasCreditoService,
+    private readonly suggestionsService: SuggestionsService,
+    private readonly purchaseHistoryService: PurchaseHistoryService,
   ) {}
 
   private politeReplies = [
@@ -459,7 +471,7 @@ export class ChatService {
     }
 
     // 2) Comandos globales -> limpiar contexto y volver al menú
-    if (isGlobalBreakCommand(raw)) {
+    if (isGlobalBreakCommand(raw) || /^(?:volver al men[uú] principal|men[uú] principal)$/i.test(raw)) {
       await this.clearAllContexts(sesion);
 
       const menu = await this.getMenuPaso();
@@ -467,6 +479,27 @@ export class ChatService {
         reply: menu.respuestaBot ?? 'Menú Principal',
         nextFlowId: menu.id,
       };
+    }
+
+    // Los números de un submenú conservan su significado dentro de ese flujo.
+    const context = this.parseSesionContext(sesion);
+    const hasFlow = !!(this.getActiveLockedFlow(sesion) || context.suggestions?.active || context.purchaseHistory?.active);
+    if ((!hasFlow && /^[78]$/.test(raw)) || /^(?:opci[oó]n [78]|ruta y visitas|cartera(?: y vencimientos)?)$/i.test(raw)) {
+      await this.clearAllContexts(sesion);
+      return { reply: /^(?:7|opci[oó]n 7|cartera)/i.test(raw) ?
+        'Cartera está pendiente de adaptación a los datos académicos.' :
+        'Ruta y visitas está en desarrollo en el chat. Puedes consultar registros desde la pantalla Visitas.', nextFlowId: 0 };
+    }
+    for (const [key, service] of [
+      ['suggestions', this.suggestionsService], ['purchaseHistory', this.purchaseHistoryService],
+    ] as const) {
+      if (/^\d+$/.test(raw) && hasFlow && !context[key]?.active) continue;
+      if ((context.suggestions?.active || context.purchaseHistory?.active) && !context[key]?.active) continue;
+      const result = await service.handle(sesion.idUsuario!, raw, context[key]);
+      if (!result) continue;
+      sesion.contexto = JSON.stringify({ [key]: result.context });
+      await this.sesionRepo.save(sesion);
+      return { reply: result.exit ? this.MENU_PRINCIPAL : result.reply, nextFlowId: 0 };
     }
 
     // 3) Flujo bloqueado: si hay contexto activo, NO reclasificar todavía
@@ -5556,6 +5589,8 @@ if (ctx.source === 'VENTAS_CATEGORIA') {
   }
 
   private async clearAllContexts(sesion: Sesion): Promise<void> {
+  await this.writeSesionContext(sesion, 'suggestions', null);
+  await this.writeSesionContext(sesion, 'purchaseHistory', null);
   await this.writePronosticoCtx(sesion, {});
   await this.writeStockSearchCtx(sesion, {});
   await this.writePromoSearchCtx(sesion, {});

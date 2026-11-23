@@ -1,3 +1,10 @@
+import { SuggestionsService } from '../suggestions/suggestions.service';
+import { SuggestionsRepository } from '../suggestions/suggestions.repository';
+import { PromotionCatalogService } from '../suggestions/promotion-catalog.service';
+import { ClientLookupService } from '../suggestions/client-lookup.service';
+import { AcademicRouteService } from '../suggestions/academic-route.service';
+import { PurchaseHistoryService } from '../suggestions/purchase-history.service';
+import { PurchaseHistoryRepository } from '../suggestions/purchase-history.repository';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatController } from './chat.controller';
@@ -27,6 +34,13 @@ import { NotasCreditoService } from './notas-credito.service';
     InventoryService,
     SalesService,
     NotasCreditoService,
+    SuggestionsService,
+    SuggestionsRepository,
+    PromotionCatalogService,
+    ClientLookupService,
+    AcademicRouteService,
+    PurchaseHistoryService,
+    PurchaseHistoryRepository,
   ],
   exports: [ChatService],
 })

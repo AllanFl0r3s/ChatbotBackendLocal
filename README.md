@@ -1,5 +1,7 @@
 # ChatbotBackendLocal
 
+> Avance 23/11/2026: se adaptaron las opciones 9 (promociones sugeridas) y 10 (historial) a los datos académicos, con respuestas breves. Migración 006 aplicada y verificada en SQL local y Azure; publicación del backend y prueba pública en Render pendientes. [Guía y ejemplos](docs/replica-historial-promociones.md).
+
 Backend del chatbot para demostración académica con SQL Server local y datos ficticios.
 Basado en el backend original de Istmania; su historial se conserva y su documentación
 se encuentra en [docs/backend-original.md](docs/backend-original.md).

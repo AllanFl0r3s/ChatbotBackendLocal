@@ -78,7 +78,7 @@ const cases = [
   [
     'proyección por zona',
     ['4', '3', 'NORTE', 'PT990000001', 'noviembre 2026'],
-    [/Zona: NORTE/, /Cajas a vender: 10/],
+    [/Zona: NORTE/, /Cajas a vender: 15/],
   ],
   ['proyección sin registros', ['4', '1', 'PT990000001', 'enero 2025'], [/No encontré proyección/]],
   ['clientes con notas', ['5', '1'], [/DEMO001/, /75\.00/, /DEMO002/, /40\.00/]],
@@ -103,6 +103,7 @@ cases.push(['búsqueda sin tilde', ['stock de Dropp liquido'], [/PT990000005/]])
 cases.push(['búsqueda con tilde', ['stock de Dropp líquido'], [/PT990000005/]]);
 cases.push(['arroz fuera del catálogo activo', ['stock de arroz'], [/No encontré/]]);
 cases.push(['frijoles fuera del catálogo activo', ['stock de frijol'], [/No encontré/]]);
+cases.push(['zona sur sin proyecciones', ['4', '3', 'SUR', 'PT990000001', 'noviembre 2026'], [/No encontré proyección/]]);
 cases.push(['ventas conservadas de S02', ['3', '2', 'S02', '3', 'noviembre 2026'], [/S02/, /666\.60/]]);
 cases.push(['proyección conservada de S02', ['4', '2', 'S02', 'PT990000001', 'noviembre 2026'], [/S02/, /Cajas a vender: 5/]]);
 for (let number = 3; number <= 10; number++) {

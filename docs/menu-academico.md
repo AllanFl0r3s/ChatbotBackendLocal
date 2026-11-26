@@ -35,7 +35,7 @@ Las ventas y proyecciones principales corresponden a **noviembre de 2026**; tamb
 | Venta PT990000001, octubre 2026 | L 143.75 netos. |
 | Ventas vendedor S01, noviembre 2026 | L 1,772.00 netos. |
 | Proyección PT990000001, noviembre 2026 | 15 cajas; equivalencia ficticia de 12 unidades por caja. |
-| Proyección PT990000001, S01 o zona NORTE | 10 cajas; S02/SUR: 5 cajas. |
+| Proyección PT990000001 después de 008 y 009 | S01: 10 cajas; S02: 5 cajas; zona NORTE: 15 cajas. Solo se utiliza zona NORTE. |
 | Notas DEMO001 | NC-DEMO-001 de L 50 y NC-DEMO-002 de L 25: L 75 total. |
 | Notas DEMO002 | Una nota de L 40. |
 | Promociones en noviembre 2026 | Tres: alias de productos 001, 002 y 005. Se excluyen una expirada, una futura y una inactiva. |

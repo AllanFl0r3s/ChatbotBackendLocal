@@ -31,7 +31,11 @@ IF COALESCE((SELECT SUM(xtndprce+IMPUESTO-descuentoNormal-descuentoEspecial) FRO
  THROW 52106,N'Venta por vendedor incorrecta.',1;
 IF (SELECT SUM(Cajas) FROM dbo.Proyecciones_TEST WHERE sku=N'PT990000001' AND mes=11 AND anio=2026)<>15
  THROW 52107,N'Proyeccion por producto incorrecta.',1;
-IF (SELECT SUM(Cajas) FROM dbo.Proyecciones_TEST WHERE sku=N'PT990000001' AND Zona=N'NORTE' AND mes=11 AND anio=2026)<>10
+DECLARE @soloNorte bit=CASE WHEN EXISTS(SELECT 1 FROM dbo.__AcademicMigrations
+ WHERE Version=9 AND Nombre=N'009_solo_zona_norte') THEN 1 ELSE 0 END;
+IF @soloNorte=1 AND EXISTS(SELECT 1 FROM academico.Proyecciones WHERE Zona<>N'NORTE')
+ THROW 52113,N'Solo debe existir zona NORTE después de 009.',1;
+IF COALESCE((SELECT SUM(Cajas) FROM dbo.Proyecciones_TEST WHERE sku=N'PT990000001' AND Zona=N'NORTE' AND mes=11 AND anio=2026),0)<>CASE WHEN @soloNorte=1 THEN 15 ELSE 10 END
  THROW 52108,N'Proyeccion por zona incorrecta.',1;
 IF (SELECT SUM(TOTAL) FROM dbo.ZFI_NOTAS_CREDITO WHERE COD_CLIENTE=N'DEMO001')<>75
  THROW 52109,N'Notas de credito incorrectas.',1;

@@ -22,4 +22,4 @@ Antes de cada recorrido, escribir `menu`. Cada flecha representa un mensaje sepa
 | Proyección de S02 | `4` → `2` → `S02` → `PT990000001` → `noviembre 2026` | 5 cajas |
 | Vendedores S03 a S10 | Mismas secuencias cambiando el código | Vendedor reconocido, sin movimientos de demostración |
 
-Todos los importes y cantidades son ficticios. Las zonas NORTE y SUR se conservan en las proyecciones existentes. Los códigos de ruta S01, S09, etc. de historial y visitas son un concepto separado; este cambio no vincula vendedores con rutas, clientes ni cuentas.
+Todos los importes y cantidades son ficticios. Después de `009_solo_zona_norte.sql`, todas las proyecciones pertenecen a NORTE. Se conservan vendedores y cantidades: S01 tiene 10 cajas de PT990000001 y S02 tiene 5, ahora ambas en NORTE; la consulta por zona devuelve 15 cajas. La base impide nuevas proyecciones en otras zonas. Los códigos de ruta S01, S09, etc. de historial y visitas son un concepto separado; este cambio no vincula vendedores con rutas, clientes ni cuentas.

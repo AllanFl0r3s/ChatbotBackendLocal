@@ -12,6 +12,7 @@ import { credentialVersion } from '../auth/credential-version';
 import { JwtStrategy } from '../auth/jwt.strategy';
 import { VisitsController } from './visits.controller';
 import { VisitsService } from './visits.service';
+import { RouteAccessService } from '../route-access/route-access.service';
 import { VISITED_CLIENTS_SQL } from './visits.core';
 
 // Prueba HTTP real de NestJS/JWT, con fuente SQL simulada (no accede a la empresa).
@@ -29,7 +30,7 @@ describe('GET /visits/clients', () => {
       providers: [
         { provide: AuthSessionsService, useValue: { open: jest.fn().mockResolvedValue(undefined),
           assertActive: jest.fn().mockResolvedValue(undefined), revoke: jest.fn().mockResolvedValue(undefined) } },
-        VisitsService, JwtStrategy,
+        VisitsService, JwtStrategy, RouteAccessService,
         { provide: getRepositoryToken(User), useValue: { findOne: async ({where}: any) => ({
           id: where.id, usuario: 'fixture', passwordHash: 'fixture-hash', estado: true,
           roleId: where.id === 1 || where.id === 13 ? 1 : 2, role: { estado: true },

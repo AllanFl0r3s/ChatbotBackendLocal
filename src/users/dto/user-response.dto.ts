@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UserResponseDto {
+  @ApiProperty({ nullable: true, example: 'S01' })
+  rutaCodigo?: string | null;
+
+  @ApiProperty({ type: [String] })
+  rutasAsignadas?: string[];
+
   @ApiProperty()
   id!: number;
 

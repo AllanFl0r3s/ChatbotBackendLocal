@@ -6,6 +6,12 @@ export class User {
   @PrimaryGeneratedColumn({ name: 'ID_USUARIO' })
   id: number;
 
+  @Column({ name: 'RutaCodigo', type: 'nvarchar', length: 3, nullable: true })
+  rutaCodigo?: string | null;
+
+  @Column({ name: 'RutaGestionada', type: 'bit', default: false })
+  rutaGestionada?: boolean;
+
   @Column({ name: 'Id_Rol', type: 'int' })
   roleId: number;
 

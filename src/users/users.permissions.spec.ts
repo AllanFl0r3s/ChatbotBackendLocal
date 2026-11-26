@@ -88,6 +88,21 @@ describe('Permisos HTTP de administración de usuarios', () => {
       .set('Authorization', `Bearer ${userToken}`).send({ roleId: 1 }).expect(403);
     expect(services.update).not.toHaveBeenCalled();
   });
+  it('solo el administrador asigna rutas y no se aceptan códigos fuera de S01-S10', async () => {
+    await request(app.getHttpServer()).patch('/users/2')
+      .set('Authorization', `Bearer ${userToken}`).send({ rutaCodigo: 'S01' }).expect(403);
+    for (const rutaCodigo of ['S11', 'NORTE', '', ['S01'], 1]) {
+      await request(app.getHttpServer()).patch('/users/9')
+        .set('Authorization', `Bearer ${adminToken}`).send({ rutaCodigo }).expect(400);
+    }
+    expect(services.update).not.toHaveBeenCalled();
+    await request(app.getHttpServer()).patch('/users/9')
+      .set('Authorization', `Bearer ${adminToken}`).send({ rutaCodigo: 'S10' }).expect(200);
+    expect(services.update).toHaveBeenLastCalledWith(9, expect.objectContaining({ rutaCodigo: 'S10' }));
+    await request(app.getHttpServer()).patch('/users/9')
+      .set('Authorization', `Bearer ${adminToken}`).send({ rutaCodigo: null }).expect(200);
+    expect(services.update).toHaveBeenLastCalledWith(9, expect.objectContaining({ rutaCodigo: null }));
+  });
   it('un JWT vencido no permite administrar usuarios', async () => {
     await request(app.getHttpServer()).get('/users')
       .set('Authorization', `Bearer ${expiredToken}`).expect(401);

@@ -10,16 +10,21 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { User } from './user.entity';
+import { RouteAccessService } from '../route-access/route-access.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly routeAccess: RouteAccessService,
   ) {}
 
   private toResponse(user: User): UserResponseDto {
+    const routes = this.routeAccess.routesFor(user);
     return {
+      rutaCodigo: routes[0] ?? null,
+      rutasAsignadas: routes,
       id: user.id,
       roleId: user.roleId,
       roleName: user.role?.nombre ?? '',
@@ -77,6 +82,8 @@ export class UsersService {
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
     const user = this.usersRepository.create({
+      rutaCodigo: dto.rutaCodigo ?? null,
+      rutaGestionada: true,
       roleId: dto.roleId,
       nombre: dto.nombre,
       usuario,
@@ -108,6 +115,12 @@ export class UsersService {
 
     if (dto.nombre !== undefined) {
       user.nombre = dto.nombre;
+    }
+
+    if (dto.rutaCodigo !== undefined) {
+      user.rutaCodigo = dto.rutaCodigo;
+      // null explícito revoca accesos, incluso si existían en la configuración anterior.
+      user.rutaGestionada = true;
     }
 
     if (dto.usuario !== undefined) {

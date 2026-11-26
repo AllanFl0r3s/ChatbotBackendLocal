@@ -1,5 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { AcademicRouteService } from './academic-route.service';
+import { RouteAccessService } from '../route-access/route-access.service';
 import { ClientLookupService, suggestedClientTerm } from './client-lookup.service';
 import { SuggestionsRepository } from './suggestions.repository';
 import { PurchaseHistoryRepository } from './purchase-history.repository';
@@ -9,7 +10,8 @@ import { SuggestionsService } from './suggestions.service';
 import { historyPeriod } from './purchase-history.core';
 
 describe('Opciones académicas 9 y 10', () => {
-  const access = new AcademicRouteService(new ConfigService({ VISITS_ROUTE_ACCESS: '{"1":["S08","S09"]}' }));
+  const users = { findOne: async ({ where }: any) => ({ id: where.id, estado: true }) } as any;
+  const access = new AcademicRouteService(new RouteAccessService(users, new ConfigService({ VISITS_ROUTE_ACCESS: '{"1":["S08","S09"]}' })));
   const client = { code: 'DEMO001', name: 'Cliente de prueba', total: 1 };
   const repo = { clients: jest.fn(), catalog: jest.fn(), facts: jest.fn() };
   const purchases = { results: jest.fn() };
@@ -47,15 +49,15 @@ describe('Opciones académicas 9 y 10', () => {
     expect(repo.catalog).not.toHaveBeenCalled();
   });
 
-  it('reutiliza los permisos académicos y permite elegir otra ruta autorizada', () => {
-    expect(access.resolve(1)).toBe('S08');
-    expect(access.resolve(1, 's09')).toBe('S09');
-    expect(() => access.resolve(1, 'S02')).toThrow('No tienes permiso');
-    expect(() => access.resolve(2)).toThrow('No tienes permiso');
+  it('reutiliza los permisos académicos y permite elegir otra ruta autorizada', async () => {
+    await expect(access.resolve(1)).resolves.toBe('S08');
+    await expect(access.resolve(1, 's09')).resolves.toBe('S09');
+    await expect(access.resolve(1, 'S02')).rejects.toThrow('No tienes permiso');
+    await expect(access.resolve(2)).rejects.toThrow('No tienes permiso');
   });
-  it('una configuración inválida no abre el acceso', () => {
-    const broken = new AcademicRouteService(new ConfigService({ VISITS_ROUTE_ACCESS: '{' }));
-    expect(() => broken.resolve(1)).toThrow('configuración');
+  it('una configuración inválida no abre el acceso', async () => {
+    const broken = new AcademicRouteService(new RouteAccessService(users, new ConfigService({ VISITS_ROUTE_ACCESS: '{' })));
+    await expect(broken.resolve(1)).rejects.toThrow('configuración');
   });
   it('rechaza una ruta ajena antes de buscar clientes o consultar ventas', async () => {
     const result = await history.handle(1, '¿Cuándo fue la última compra del cliente DEMO001 en ruta S02?');

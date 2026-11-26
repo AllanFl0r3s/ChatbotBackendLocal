@@ -6,6 +6,7 @@ import { AcademicRouteService } from '../suggestions/academic-route.service';
 import { PurchaseHistoryService } from '../suggestions/purchase-history.service';
 import { PurchaseHistoryRepository } from '../suggestions/purchase-history.repository';
 import { Module } from '@nestjs/common';
+import { RouteAccessModule } from '../route-access/route-access.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
@@ -21,6 +22,7 @@ import { NotasCreditoService } from './notas-credito.service';
 
 @Module({
   imports: [
+    RouteAccessModule,
     TypeOrmModule.forFeature([
       Sesion,
       Mensaje,

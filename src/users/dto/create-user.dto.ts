@@ -3,6 +3,7 @@ import {
   IsBoolean,
   IsEmail,
   IsInt,
+  IsIn,
   IsOptional,
   IsString,
   MaxLength,
@@ -10,6 +11,11 @@ import {
 } from 'class-validator';
 
 export class CreateUserDto {
+  @ApiPropertyOptional({ example: 'S01', nullable: true })
+  @IsOptional()
+  @IsIn(['S01','S02','S03','S04','S05','S06','S07','S08','S09','S10'])
+  rutaCodigo?: string | null;
+
   @ApiProperty({ example: 1 })
   @IsInt()
   roleId!: number;

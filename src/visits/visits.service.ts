@@ -4,8 +4,9 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { RouteAccessService } from '../route-access/route-access.service';
 import {
-  authorizeVisitsRoute, buildVisitsResponse, parseVisitsQuery,
+  buildVisitsResponse, parseVisitsQuery,
   visitedClientsSql, visitsSqlParameters, VisitsAccessError, VisitsInputError,
 } from './visits.core';
 import type { VisitsDbRow } from './visits.core';
@@ -19,6 +20,7 @@ export class VisitsService {
     // No usar la conexión principal, que almacena los datos internos de CHATBOT.
     @InjectDataSource('prodConnection') private readonly dataSource: DataSource,
     private readonly config: ConfigService,
+    private readonly access: RouteAccessService,
   ) {}
 
   async listClients(userId: number, rawQuery: Record<string, unknown>) {
@@ -26,15 +28,14 @@ export class VisitsService {
     let sql: string;
     try {
       query = parseVisitsQuery(rawQuery);
-      // Asignación explícita en el servidor hasta definir integración con PACO.
-      // Sin configuración, ninguna cuenta tiene acceso, tampoco el administrador.
-      authorizeVisitsRoute(userId, query.route, this.config.get<string>('VISITS_ROUTE_ACCESS') ?? '{}');
+      await this.access.resolve(userId, query.route);
       // Este repositorio es el backend académico: por defecto consulta academico.*.
       // El modo legacy solo se habilita explícitamente desde el servidor.
       sql = visitedClientsSql(this.config.get<string>('VISITS_DATA_SOURCE') ?? 'academic');
     } catch (error) {
       if (error instanceof VisitsInputError) throw new BadRequestException(error.message);
       if (error instanceof VisitsAccessError) throw new ForbiddenException(error.message);
+      if (error instanceof ForbiddenException || error instanceof ServiceUnavailableException) throw error;
       throw new ServiceUnavailableException('La consulta de visitas no está configurada correctamente.');
     }
 

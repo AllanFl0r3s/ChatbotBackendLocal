@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, ServiceUnavailableException } 
 import { ConfigService } from '@nestjs/config';
 import type { DataSource } from 'typeorm';
 import { VisitsService } from './visits.service';
+import { RouteAccessService } from '../route-access/route-access.service';
 import { ACADEMIC_VISITED_CLIENTS_SQL, VISITED_CLIENTS_SQL } from './visits.core';
 
 // Se prueba el servicio sin abrir puertos ni conectarse a bases empresariales.
@@ -11,6 +12,8 @@ describe('Visitas académicas: selección de fuente y permisos', () => {
   const createService = (source?: string) => new VisitsService(
     sql as unknown as DataSource,
     new ConfigService({ VISITS_ROUTE_ACCESS: '{"1":["S08"]}', VISITS_DATA_SOURCE: source }),
+    new RouteAccessService({ findOne: async ({ where }: any) => ({ id: where.id, estado: true }) } as any,
+      new ConfigService({ VISITS_ROUTE_ACCESS: '{"1":["S08"]}' })),
   );
   beforeEach(() => sql.query.mockReset());
 

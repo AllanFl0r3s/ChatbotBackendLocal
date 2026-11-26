@@ -4,7 +4,8 @@ import { SuggestionsRepository } from './suggestions.repository';
 import { normalize } from './suggestions.core';
 
 export function suggestedClientTerm(text: string): string | undefined {
-  return text.match(/\bcliente\s+(.+?)(?=\s+(?:tienen?|est[aá]n|vencen?|para|con|en|durante|est[ae]|el mes|pr[oó]xim\w*)\b|[?¿]|$)/i)?.[1]?.replace(/[.!]+$/, '').trim();
+  const term = text.match(/\bcliente\s+(.+?)(?=\s+(?:tienen?|est[aá]n|vencen?|para|con|en|durante|est[ae]|el mes|hoy|ayer|[uú]ltimos|pr[oó]xim\w*)\b|[?¿]|$)/i)?.[1];
+  return term?.replace(/\s+(?:(?:del|desde|entre)\s+)?\d{1,4}[/-]\d{1,2}[/-]\d{1,4}[\s\S]*$/i, '').replace(/[.!]+$/, '').trim();
 }
 
 @Injectable()

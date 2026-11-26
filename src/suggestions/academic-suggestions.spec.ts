@@ -30,6 +30,23 @@ describe('Opciones académicas 9 y 10', () => {
   });
   afterEach(() => jest.useRealTimers());
 
+  it('atrás limpia el historial y conserva la ruta académica elegida', async () => {
+    const result = await history.handle(1, 'atrás', { active: true, route: 'S09', action: 2, client, from: '2026-01-01', page: 1 });
+    expect(result?.reply).toContain('Historial de compras.');
+    expect(result?.context).toEqual({ active: true, route: 'S09' });
+    expect((await history.handle(1, 'atras', result!.context!))?.exit).toBe(true);
+    expect(purchases.results).not.toHaveBeenCalled();
+  });
+  it('atrás en promociones permite volver al menú y cambiar de cliente', async () => {
+    const result = await suggestions.handle(1, 'atrás', { active: true, route: 'S08', action: 6, client, selection: ['DEMO-PROMO-1'], page: 1 });
+    expect(result?.reply).toContain('¿Qué deseas consultar?');
+    expect(result?.context).toEqual({ active: true, route: 'S08', client });
+    const choose = await suggestions.handle(1, 'atras', result!.context!);
+    expect(choose?.context).toEqual({ active: true, route: 'S08' });
+    expect((await suggestions.handle(1, 'atrás', choose!.context!))?.exit).toBe(true);
+    expect(repo.catalog).not.toHaveBeenCalled();
+  });
+
   it('reutiliza los permisos académicos y permite elegir otra ruta autorizada', () => {
     expect(access.resolve(1)).toBe('S08');
     expect(access.resolve(1, 's09')).toBe('S09');
@@ -56,7 +73,8 @@ describe('Opciones académicas 9 y 10', () => {
     const first = await history.handle(1, '10');
     const second = await history.handle(1, '2', first!.context!);
     const third = await history.handle(1, 'DEMO001', second!.context!);
-    expect(third?.reply).toContain('Indica el período');
+    expect(third?.reply).toContain('¿De qué fechas quieres ver las compras?');
+    expect(third?.reply).toContain('Ejemplo: 1/1/2026 al 1/5/2026');
     expect(purchases.results).not.toHaveBeenCalled();
     await history.handle(1, 'mes pasado', third!.context!);
     expect(purchases.results).toHaveBeenCalledWith('S08', 'DEMO001', 2, '2026-10-01', '2026-10-31', 0);

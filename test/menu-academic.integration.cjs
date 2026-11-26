@@ -42,7 +42,7 @@ async function chat(message) {
 const cases = [
   [
     'stock y detalle por bodega',
-    ['1', local ? 'agua' : 'Quartz 600ml', '1'],
+    ['1', 'Quartz 600ml', '1'],
     [/Stock total: 135/, /120 Unids/, /15 Unids/],
   ],
   [
@@ -67,7 +67,7 @@ const cases = [
   [
     'ventas por categoría',
     ['3', '3', '1', 'Bebidas', '3', 'noviembre 2026'],
-    [/Ventas por categoría/, local ? /Total vendido: L 732\.50/ : /Total vendido: L 1,231\.60/],
+    [/Ventas por categoría/, /Total vendido: L 1,231\.60/],
   ],
   ['proyección por producto', ['4', '1', 'PT990000001', 'noviembre 2026'], [/Cajas a vender: 15/]],
   [
@@ -93,16 +93,16 @@ const cases = [
     ['6'],
     [/Encontré 3 promociones/, /Promo DEMO/, /sin validez comercial/],
   ],
-  ['selección de promoción y stock', ['6', '1'], [/Stock/, /135/]],
+  ['selección de promoción y stock', ['6', '1'], [/Stock/, /PT990000005/, /53/]],
   ['texto de promoción', ['6', 'mensaje 1'], [/ficticio|DEMO|demostraci[oó]n/i]],
   ['producto inexistente', ['stock de producto inexistente'], [/No encontré/]],
   ['stock por código', ['stock PT990000001'], [/Stock total: 135/]],
   ['texto no reconocido sin proveedor externo', ['necesito ayuda con un tema desconocido'], [/No logré identificar/]],
 ];
-if (local) {
-  cases.push(['búsqueda sin tilde', ['stock de jabon'], [/212/]]);
-  cases.push(['búsqueda con tilde', ['stock de jabón'], [/212/]]);
-}
+cases.push(['búsqueda sin tilde', ['stock de Dropp liquido'], [/PT990000005/]]);
+cases.push(['búsqueda con tilde', ['stock de Dropp líquido'], [/PT990000005/]]);
+cases.push(['arroz fuera del catálogo activo', ['stock de arroz'], [/No encontré/]]);
+cases.push(['frijoles fuera del catálogo activo', ['stock de frijol'], [/No encontré/]]);
 (async () => {
   try {
     const login = await api('/auth/login', 'POST', { identifier, password });

@@ -17,6 +17,7 @@ import { ChatModule } from './chat/chat.module';
 import { PerfilModule } from './perfil/perfil.module';
 // Primera consulta de visitas: módulo independiente del chat y de OpenAI.
 import { VisitsModule } from './visits/visits.module';
+import { DemoFeedbackModule } from './demo-feedback/demo-feedback.module';
 
 @Module({
   imports: [
@@ -199,6 +200,7 @@ import { VisitsModule } from './visits/visits.module';
     ChatModule,
     PerfilModule,
     VisitsModule,
+    DemoFeedbackModule,
   ],
 
   controllers: [AppController],

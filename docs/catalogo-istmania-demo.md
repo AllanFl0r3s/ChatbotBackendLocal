@@ -1,5 +1,11 @@
 # Catálogo académico con productos de Istmania
 
+## Actualización local del 26 de noviembre de 2026
+
+La base DW_ISTMA de SQLEXPRESS ahora utiliza los mismos seis nombres de esta muestra. Se aplicó `database/academic/003_catalogo_istmania_local.sql`, adaptación de 003 con destino restringido a la base académica local. Ya no aparecen arroz ni frijoles en el catálogo activo. Se conservaron los IDs, alias PT, existencias y relaciones comerciales; la segunda ejecución no duplicó datos. Los registros posteriores de este documento describen la validación histórica de Azure y no una nueva ejecución en la nube.
+
+Se verificaron por HTTP 26 recorridos del menú y 27 de historial/promociones contra SQL local, todos aprobados. La lista inicial de Stock también mostró los seis productos nuevos y su selección devolvió el detalle actualizado. Los vinos y tequilas todavía no forman parte de esta muestra y quedan para una próxima selección de productos.
+
 ## Fuente y límites
 
 Se revisó el PDF proporcionado por el propietario, **CATÁLOGO ISTMANIA 2026 (5.5 x 8.5 in).pdf**, de 64 páginas. Se comprobaron visualmente las páginas relevantes antes de elegir esta muestra.

@@ -57,7 +57,38 @@ describe('Chat: navegación numérica sin clasificador externo', () => {
     expect(result.reply).toContain('Para consultar stock');
     expect(JSON.parse(session.contexto).navigation).toMatchObject({ source: 'STOCK', step: 'AWAITING_PRODUCT' });
     expect(externalCall).not.toHaveBeenCalled();
-    expect(query).not.toHaveBeenCalled();
+    expect(query).toHaveBeenCalledTimes(1);
+    expect(result.reply).toContain('Quartz agua purificada botella 600 ml');
+    expect(result.reply).toContain('PT990000001');
+    expect(result.reply).not.toContain('PT001022005');
+  });
+
+  it('elige un ejemplo del catálogo por número y consulta su detalle actualizado', async () => {
+    await service.handleWebMessage(1, 'menu');
+    await service.handleWebMessage(1, '1');
+    const result = await service.handleWebMessage(1, '1');
+    expect(result.reply).toContain('Stock total: 135');
+    expect(result.reply).toContain('120 Unids');
+    expect(result.reply).toContain('15 Unids');
+    expect(externalCall).not.toHaveBeenCalled();
+  });
+
+  it('no inventa ejemplos cuando no hay productos disponibles', async () => {
+    query.mockResolvedValueOnce([]);
+    await service.handleWebMessage(1, 'menu');
+    const result = await service.handleWebMessage(1, '1');
+    expect(result.reply).toContain('No hay productos con existencias');
+    expect(result.reply).not.toContain('PT990000001');
+    expect(JSON.parse(session.contexto).stockSearch.items).toBeUndefined();
+  });
+
+  it('un fallo del catálogo permite reintentar sin mostrar ejemplos inventados ni errores SQL', async () => {
+    query.mockRejectedValueOnce(new Error('private SQL details'));
+    await service.handleWebMessage(1, 'menu');
+    const result = await service.handleWebMessage(1, '1');
+    expect(result.reply).toContain('No pude cargar los ejemplos');
+    expect(result.reply).not.toContain('private SQL');
+    expect(JSON.parse(session.contexto).navigation.step).toBe('AWAITING_PRODUCT');
   });
 
   it('menu → 1 → producto → 1 conserva la selección del listado de stock', async () => {
@@ -92,6 +123,16 @@ describe('Chat: navegación numérica sin clasificador externo', () => {
     await service.handleWebMessage(1, 'menu');
     const result = await service.handleWebMessage(1, '2');
     expect(result.reply).toContain('número de pedido');
+    expect(result.reply).toContain('Escribe “atrás” para volver.');
+    expect(externalCall).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+  it('atrás desde pedidos regresa al menú y elimina la consulta pendiente', async () => {
+    await service.handleWebMessage(1, 'menu');
+    await service.handleWebMessage(1, '2');
+    const menu = await service.handleWebMessage(1, 'atrás');
+    expect(menu.reply).toContain('1) Stock disponibles');
+    expect(menu.reply).not.toContain('Escribe “atrás” para volver.');
     expect(externalCall).not.toHaveBeenCalled();
     expect(query).not.toHaveBeenCalled();
   });

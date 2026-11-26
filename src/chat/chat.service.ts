@@ -1,3 +1,4 @@
+import { withBackHint } from './helpers/back-navigation';
 import { SuggestionsService } from '../suggestions/suggestions.service';
 import { PurchaseHistoryService } from '../suggestions/purchase-history.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
@@ -443,7 +444,17 @@ export class ChatService {
   // =========================================================
   // CORE: Router por intención (OpenAI) — cerrado por contexto
   // =========================================================
-  private async resolveReplyFromDb(
+  // Una sola salida añade la ayuda a todas las consultas, también a los flujos antiguos.
+  private async resolveReplyFromDb(sesion: Sesion, text: string): Promise<{ reply: string; followUp?: string; nextFlowId: number }> {
+    const result = await this.resolveReplyContentFromDb(sesion, text);
+    if (result.reply === this.MENU_PRINCIPAL || result.reply === this.MENU_OPCIONES ||
+        this.politeReplies?.includes(result.reply)) return result;
+    return result.followUp
+      ? { ...result, followUp: withBackHint(result.followUp, true) }
+      : { ...result, reply: withBackHint(result.reply, true) };
+  }
+
+  private async resolveReplyContentFromDb(
     sesion: Sesion,
     text: string,
   ): Promise<{ reply: string; followUp?: string; nextFlowId: number }> {
@@ -483,6 +494,11 @@ export class ChatService {
 
     // Los números de un submenú conservan su significado dentro de ese flujo.
     const context = this.parseSesionContext(sesion);
+    // Fuera de los módulos nuevos, atrás vuelve al menú principal.
+    if (/^atr[aá]s$/i.test(raw) && !(context.suggestions?.active || context.purchaseHistory?.active)) {
+      await this.clearAllContexts(sesion);
+      return { reply: this.MENU_PRINCIPAL, nextFlowId: pasoActual.id };
+    }
     const hasFlow = !!(this.getActiveLockedFlow(sesion) || context.suggestions?.active || context.purchaseHistory?.active);
     if ((!hasFlow && /^[78]$/.test(raw)) || /^(?:opci[oó]n [78]|ruta y visitas|cartera(?: y vencimientos)?)$/i.test(raw)) {
       await this.clearAllContexts(sesion);
@@ -1308,14 +1324,34 @@ if (looksLikeNotasCliente) {
       payload: null,
     });
 
+    await this.writeStockSearchCtx(sesion, {});
+    let examples: Awaited<ReturnType<InventoryService['findAvailableExamples']>>;
+    try {
+      examples = await this.inventoryService.findAvailableExamples();
+    } catch {
+      return {
+        reply: 'Para consultar stock, escribe el SKU o el nombre del producto.\n\n' +
+          'No pude cargar los ejemplos de productos en este momento. Intenta de nuevo escribiendo "menu" y luego "1".',
+        nextFlowId: pasoActual.id,
+      };
+    }
+    if (!examples.length) {
+      return {
+        reply: 'Para consultar stock, escribe el SKU o el nombre del producto.\n\n' +
+          'No hay productos con existencias para mostrar como ejemplo en este momento. Puedes consultar un código conocido para comprobar su stock.',
+        nextFlowId: pasoActual.id,
+      };
+    }
+    await this.writeStockSearchCtx(sesion, {
+      page: 0, pageSize: 6, total: examples.length,
+      items: examples.map(row => ({ sku: row.CodigoS4, nombre: row.Nombre })),
+    });
     return {
-      reply:
-        'Para consultar stock, escribe el SKU o el nombre del producto.\n\n' +
-        'Formato sugerido:\n' +
-        'Nombre + presentación + envase\n\n' +
-        'Ejemplos:\n' +
-        '- Plata Lite 750ml vidrio\n' +
-        '- PT001022005',
+      reply: 'Para consultar stock, escribe el SKU o el nombre del producto.\n\n' +
+        'Estos son algunos productos con existencias en la base de datos conectada:\n\n' +
+        examples.map((row, i) => `${i + 1}) ${row.Nombre}\n   Código: ${row.CodigoS4}`).join('\n\n') +
+        '\n\nEscribe el número de una opción para ver sus existencias por bodega, o escribe un código o nombre para buscar otro producto.\n' +
+        'Esta es una muestra de hasta 6 productos; las existencias se verifican al consultar el detalle.',
       nextFlowId: pasoActual.id,
     };
   }

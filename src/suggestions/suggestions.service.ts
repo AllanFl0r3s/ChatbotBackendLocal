@@ -32,6 +32,17 @@ export class SuggestionsService {
     if (ctx.route && ctx.route !== route)
       return { reply: 'Tu ruta cambió. Vuelve al menú principal e inicia otra consulta.', context: null };
     ctx.route = route;
+    if (t === 'atras') {
+      // Conservar el cliente al salir de una consulta; el siguiente atrás permite cambiarlo.
+      if (ctx.action && ctx.client) {
+        const menuContext: SuggestionContext = { active: true, route, client: ctx.client };
+        const prompt = await this.clients.resolve(menuContext, text);
+        return { reply: prompt ?? `${ctx.client.name.trim()}\n${SUGGESTIONS_MENU}`, context: menuContext };
+      }
+      return ctx.client || ctx.choices || ctx.action
+        ? { reply: '¿Para qué cliente deseas consultar? Escribe su código o nombre.', context: { active: true, route } as SuggestionContext }
+        : { reply: '', context: null, exit: true };
+    }
     const embeddedClient = suggestedClientTerm(text);
     if (embeddedClient && previous?.client) {
       // Una nueva pregunta sobre otro cliente no debe reutilizar el cliente anterior.

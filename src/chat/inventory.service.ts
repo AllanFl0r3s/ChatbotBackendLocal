@@ -237,6 +237,19 @@ export class InventoryService {
     return unique;
   }
 
+  async findAvailableExamples(): Promise<StockRow[]> {
+    const rows = await this.prodDataSource.query(`
+      SELECT TOP (6) CodigoS4, Nombre, StockTotal
+      FROM dbo.VWchatbot_STOCK_S4_PRODUCTO
+      WHERE StockTotal > 0 AND NULLIF(LTRIM(RTRIM(Nombre)), '') IS NOT NULL
+        AND (CodigoS4 LIKE 'PT%' OR CodigoS4 LIKE 'SE%' OR CodigoS4 LIKE 'ME%')
+      ORDER BY Nombre, CodigoS4
+    `);
+    return (rows ?? []).map(row => this.cleanStockRow(row))
+      .filter(row => this.isAllowedCodigoS4(row.CodigoS4) && row.Nombre && row.StockTotal > 0)
+      .slice(0, 6);
+  }
+
   async findStockByNamePaged(termRaw: string, page: number, pageSize: number) {
     const term = this.cleanString(termRaw);
     const p = Number.isFinite(page) && page >= 0 ? page : 0;

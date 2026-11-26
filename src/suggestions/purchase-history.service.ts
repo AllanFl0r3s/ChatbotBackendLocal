@@ -4,7 +4,7 @@ import { addDays, normalize, todayInHonduras } from './suggestions.core';
 import { ClientLookupService, suggestedClientTerm } from './client-lookup.service';
 import { historyStart } from './suggestions.core';
 import type { SuggestionContext } from './suggestions.core';
-import { HISTORY_MENU, historyAction, historyPeriod, inactiveDays, isHistoryEntry } from './purchase-history.core';
+import { HISTORY_MENU, PERIOD_HELP, historyAction, readHistoryPeriod, inactiveDays, isHistoryEntry } from './purchase-history.core';
 import { PurchaseHistoryRepository } from './purchase-history.repository';
 import { shortDate } from './suggestions.core';
 
@@ -27,6 +27,9 @@ export class PurchaseHistoryService {
     catch (error) { return { reply: (error as Error).message, context: null }; }
     if (previous?.route && previous.route !== route)
       return { reply: 'Tu ruta cambió. Vuelve al menú principal e inicia otra consulta.', context: null };
+    if (t === 'atras') return previous?.action
+      ? { reply: HISTORY_MENU, context: { active: true, route } as SuggestionContext }
+      : { reply: '', context: null, exit: true };
     let ctx: SuggestionContext = previous?.active ? { ...previous } : { active: true, route };
     const today = todayInHonduras();
     const next = /^(mas|siguientes)$/.test(t);
@@ -36,17 +39,18 @@ export class PurchaseHistoryService {
     }
     if (!ctx.action) return { reply: HISTORY_MENU, context: ctx };
     // Capturar el período en el primer turno, incluso si falta seleccionar el cliente.
-    if (ctx.action === 2 && !ctx.from) Object.assign(ctx, historyPeriod(text, today));
+    const periodInput = ctx.action === 2 ? readHistoryPeriod(text, today) : {};
+    if (ctx.action === 2 && !ctx.from) Object.assign(ctx, periodInput.period);
     if (ctx.action === 4 && !ctx.days && !(/^[1-4]$/.test(t) && (previous?.action !== 4 || previous.page !== undefined)))
       ctx.days = inactiveDays(text);
     if (ctx.action !== 4) {
       const prompt = await this.clients.resolve(ctx, text, suggestedClientTerm(text) ??
         (previous?.action === ctx.action && !previous.client && !previous.choices && !isHistoryEntry(text) &&
-          !historyPeriod(text, today) ? text.trim() : undefined));
+          !periodInput.period && !periodInput.error ? text.trim() : undefined));
       if (prompt) return { reply: prompt, context: ctx };
     }
     if (ctx.action === 2 && !ctx.from)
-      return { reply: 'Indica el período: mes pasado, este mes, una fecha AAAA-MM-DD o dos fechas AAAA-MM-DD a AAAA-MM-DD.', context: ctx };
+      return { reply: periodInput.error ? `${periodInput.error}\n${PERIOD_HELP}` : PERIOD_HELP, context: ctx };
     if (ctx.action === 4 && !ctx.days)
       return { reply: '¿Cuántos días sin compras deseas consultar? Escribe un número entre 1 y 3650.', context: ctx };
     ctx.page = next ? (ctx.page ?? 0) + 1 : 0;

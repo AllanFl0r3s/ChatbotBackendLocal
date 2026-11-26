@@ -69,3 +69,20 @@ La última comprobación inicia una API temporal en un puerto libre y se limita 
 ## Leer el código
 
 `src/suggestions` reúne ambos flujos: core contiene reglas de texto y fechas; los repositorios contienen SQL con parámetros; ClientLookupService comparte la selección de clientes; AcademicRouteService reutiliza permisos; los servicios coordinan las preguntas. ChatService solo dirige los mensajes y guarda el contexto. No se añadieron dependencias ni llamadas nuevas a OpenAI.
+
+## Fechas prácticas para el vendedor — 24/11/2026
+
+El historial acepta día/mes/año con uno o dos dígitos para día y mes, y año de dos o cuatro dígitos: `1/1/26 - 1/5/26` significa del 1 de enero al 1 de mayo de 2026. Se mantienen las fechas ISO. También se aceptan «hoy», «ayer», «este mes», «mes pasado» y «últimos 7 días». Los años cortos se interpretan como 2000–2099.
+
+Las fechas inexistentes, futuras, invertidas o los rangos con más de dos fechas reciben una explicación concreta. No se intercambian fechas automáticamente ni se ejecuta SQL con un período inválido. El cliente seleccionado se conserva al corregir las fechas. La pregunta puede incluir el cliente y el rango en un solo mensaje.
+
+La consulta de fechas se mantiene completamente por texto dentro del chat. La pregunta incluye siempre un ejemplo de rango con su significado; si las fechas son inválidas, se muestra la explicación y se repite la ayuda.
+
+Validación del 24/11: compilación correcta y 27 comprobaciones HTTP contra SQL académico local, incluida la pregunta de fechas. La mejora está pendiente de commit/push tanto del frontend como del backend y publicación; no requiere migraciones nuevas en Azure.
+
+
+## Volver dentro del chat
+
+Las respuestas de todas las consultas, incluidas stock, pedidos, ventas, proyecciones, notas de crédito y promociones, muestran «Escribe “atrás” para volver». Se acepta con o sin tilde. Desde una consulta de historial vuelve a su submenú y limpia cliente, fechas y paginación; desde el submenú vuelve al principal. En promociones, primero vuelve al menú del cliente, después permite elegir otro cliente y finalmente sale al principal. Cada turno conserva la validación de permisos de ruta. No se agregaron botones ni dependencias.
+
+La ayuda se agrega una sola vez al final del último mensaje de la respuesta. Se omite en el menú principal y despedidas. En las opciones anteriores, atrás regresa al principal y limpia el contexto pendiente.

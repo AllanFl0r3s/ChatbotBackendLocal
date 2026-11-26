@@ -1,5 +1,5 @@
 /* Solo lectura. Seleccionar DW_ISTMA academica despues de 004.
-   Valores exactos de la semilla, antes de editar los datos de demostracion.
+   Valores de la semilla; admite el catálogo de vendedores actualizado con 008.
    Las promociones vigentes dependen de fecha real; las aserciones usan 14/11/2026.
 */
 SET NOCOUNT ON;
@@ -9,7 +9,14 @@ IF NOT EXISTS(SELECT 1 FROM sys.extended_properties WHERE class=0 AND name=N'Ent
  THROW 52101,N'Falta la marca academica.',1;
 IF NOT EXISTS(SELECT 1 FROM dbo.__AcademicMigrations WHERE Version=4 AND Nombre=N'004_menu_completo_academico')
  THROW 52102,N'Primero aplicar 004.',1;
-IF (SELECT COUNT(*) FROM academico.Vendedores)<>2 OR (SELECT COUNT(*) FROM academico.Pedidos)<>2
+DECLARE @vendedores008 bit=CASE WHEN EXISTS(SELECT 1 FROM dbo.__AcademicMigrations
+ WHERE Version=8 AND Nombre=N'008_vendedores_S01_S10') THEN 1 ELSE 0 END;
+DECLARE @codigoVendedor nvarchar(20)=CASE WHEN @vendedores008=1 THEN N'S01' ELSE N'DEMO01' END;
+IF @vendedores008=1 AND EXISTS(SELECT Codigo FROM
+ (VALUES(N'S01'),(N'S02'),(N'S03'),(N'S04'),(N'S05'),(N'S06'),(N'S07'),(N'S08'),(N'S09'),(N'S10'))e(Codigo)
+ EXCEPT SELECT Codigo FROM academico.Vendedores)
+ THROW 52112,N'Falta algún vendedor de S01 a S10.',1;
+IF (SELECT COUNT(*) FROM academico.Vendedores)<>CASE WHEN @vendedores008=1 THEN 10 ELSE 2 END OR (SELECT COUNT(*) FROM academico.Pedidos)<>2
  OR (SELECT COUNT(*) FROM academico.PedidoDetalle)<>3 OR (SELECT COUNT(*) FROM academico.Ventas)<>8
  OR (SELECT COUNT(*) FROM academico.Proyecciones)<>7 OR (SELECT COUNT(*) FROM academico.NotasCredito)<>3
  OR (SELECT COUNT(*) FROM academico.Promociones)<>6
@@ -19,8 +26,8 @@ IF (SELECT SUM(Unidades) FROM dbo.VWchatbot_PEDIDO_DETALLE_S4 WHERE IdPedido=N'0
 IF (SELECT SUM(xtndprce+IMPUESTO-descuentoNormal-descuentoEspecial) FROM dbo.VentasCasaMarca
  WHERE ITEMNMBR=N'PT990000001' AND Mes=11 AND Anio=2026)<>502.50
  THROW 52105,N'Venta por producto incorrecta.',1;
-IF (SELECT SUM(xtndprce+IMPUESTO-descuentoNormal-descuentoEspecial) FROM dbo.VentasCasaMarca
- WHERE SLPRSNID=N'DEMO01' AND Mes=11 AND Anio=2026)<>1772.00
+IF COALESCE((SELECT SUM(xtndprce+IMPUESTO-descuentoNormal-descuentoEspecial) FROM dbo.VentasCasaMarca
+ WHERE SLPRSNID=@codigoVendedor AND Mes=11 AND Anio=2026),0)<>1772.00
  THROW 52106,N'Venta por vendedor incorrecta.',1;
 IF (SELECT SUM(Cajas) FROM dbo.Proyecciones_TEST WHERE sku=N'PT990000001' AND mes=11 AND anio=2026)<>15
  THROW 52107,N'Proyeccion por producto incorrecta.',1;

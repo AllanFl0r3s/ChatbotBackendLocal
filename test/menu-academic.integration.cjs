@@ -63,7 +63,7 @@ const cases = [
     [/Venta neta: L 143\.75/],
   ],
   ['ventas sin registros', ['3', '1', 'PT990000001', '3', 'enero 2025'], [/No encontré ventas/]],
-  ['ventas por vendedor', ['3', '2', 'DEMO01', '3', 'noviembre 2026'], [/1,772\.00|1772\.00/]],
+  ['ventas por vendedor S01', ['3', '2', 'S01', '3', 'noviembre 2026'], [/S01/, /1,772\.00|1772\.00/]],
   [
     'ventas por categoría',
     ['3', '3', '1', 'Bebidas', '3', 'noviembre 2026'],
@@ -72,8 +72,8 @@ const cases = [
   ['proyección por producto', ['4', '1', 'PT990000001', 'noviembre 2026'], [/Cajas a vender: 15/]],
   [
     'proyección por vendedor',
-    ['4', '2', 'DEMO01', 'PT990000001', 'noviembre 2026'],
-    [/DEMO01/, /Cajas a vender: 10/],
+    ['4', '2', 'S01', 'PT990000001', 'noviembre 2026'],
+    [/S01/, /Cajas a vender: 10/],
   ],
   [
     'proyección por zona',
@@ -103,6 +103,13 @@ cases.push(['búsqueda sin tilde', ['stock de Dropp liquido'], [/PT990000005/]])
 cases.push(['búsqueda con tilde', ['stock de Dropp líquido'], [/PT990000005/]]);
 cases.push(['arroz fuera del catálogo activo', ['stock de arroz'], [/No encontré/]]);
 cases.push(['frijoles fuera del catálogo activo', ['stock de frijol'], [/No encontré/]]);
+cases.push(['ventas conservadas de S02', ['3', '2', 'S02', '3', 'noviembre 2026'], [/S02/, /666\.60/]]);
+cases.push(['proyección conservada de S02', ['4', '2', 'S02', 'PT990000001', 'noviembre 2026'], [/S02/, /Cajas a vender: 5/]]);
+for (let number = 3; number <= 10; number++) {
+  const code = 'S' + String(number).padStart(2, '0');
+  cases.push([`ventas sin movimientos de ${code}`, ['3', '2', code, '3', 'noviembre 2026'], [/No encontré ventas/]]);
+  cases.push([`proyecciones sin movimientos de ${code}`, ['4', '2', code, 'PT990000001', 'noviembre 2026'], [/No encontré proyección/]]);
+}
 (async () => {
   try {
     const login = await api('/auth/login', 'POST', { identifier, password });

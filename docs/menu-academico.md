@@ -33,9 +33,9 @@ Las ventas y proyecciones principales corresponden a **noviembre de 2026**; tamb
 | Pedido 0001002 | 12 unidades de PT990000002. |
 | Venta PT990000001, noviembre 2026 | L 502.50 netos. |
 | Venta PT990000001, octubre 2026 | L 143.75 netos. |
-| Ventas vendedor DEMO01, noviembre 2026 | L 1,772.00 netos. |
+| Ventas vendedor S01, noviembre 2026 | L 1,772.00 netos. |
 | Proyección PT990000001, noviembre 2026 | 15 cajas; equivalencia ficticia de 12 unidades por caja. |
-| Proyección PT990000001, DEMO01 o zona NORTE | 10 cajas; DEMO02/SUR: 5 cajas. |
+| Proyección PT990000001, S01 o zona NORTE | 10 cajas; S02/SUR: 5 cajas. |
 | Notas DEMO001 | NC-DEMO-001 de L 50 y NC-DEMO-002 de L 25: L 75 total. |
 | Notas DEMO002 | Una nota de L 40. |
 | Promociones en noviembre 2026 | Tres: alias de productos 001, 002 y 005. Se excluyen una expirada, una futura y una inactiva. |
@@ -53,10 +53,10 @@ Enviar cada mensaje por separado. Empezar con `menu` antes de un recorrido indep
 | 1. Stock | `1` → `agua` (local) o `Quartz 600ml` (Azure) → `1`. También `stock PT990000001` devuelve el detalle directamente. |
 | 2. Pedido | `2` → `0001001`. Otro número de 6–15 dígitos consulta otro pedido; conserva ceros iniciales. |
 | 3. Ventas de producto | `3` → `1` → `PT990000001` → `3` → `noviembre 2026`. |
-| 3. Ventas de vendedor | `3` → `2` → `DEMO01` → `3` → `noviembre 2026`. |
+| 3. Ventas de vendedor | `3` → `2` → `S01` → `3` → `noviembre 2026`. |
 | 3. Ventas de categoría | `3` → `3` → `1` → `Bebidas` → `3` → `noviembre 2026`. Si hay varias categorías, escribir el nombre completo solicitado. |
 | 4. Proyección por producto | `4` → `1` → `PT990000001` → `noviembre 2026`. |
-| 4. Proyección por vendedor | `4` → `2` → `DEMO01` → `PT990000001` → `noviembre 2026`. |
+| 4. Proyección por vendedor | `4` → `2` → `S01` → `PT990000001` → `noviembre 2026`. |
 | 4. Proyección por zona | `4` → `3` → `NORTE` → `PT990000001` → `noviembre 2026`. |
 | 5. Notas de crédito | `5` → `1` para listar; o `5` → `2` → `DEMO001` para ver sus notas. |
 | 6. Promociones | `6` → `1` para consultar stock de la primera; `mensaje 1` desde el listado prepara texto de demostración, sin enviarlo a nadie. |

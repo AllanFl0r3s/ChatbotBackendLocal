@@ -29,10 +29,10 @@ export class SuggestionsRepository {
   }
 
   async catalog(today: string): Promise<Catalog> {
-    const promotions = await this.query<Promotion>(`SELECT id,sku,name,startsOn,endsOn,conditions
+    const promotions = await this.query<Promotion>(`SELECT id,sku,name,startsOn,endsOn,conditions,buyQuantity,buyUnit,bonusQuantity,bonusUnit
       FROM dbo.VWchatbot_PROMOCIONES_SUGERIDAS
       WHERE startsOn<=CAST(@0 AS date) AND endsOn>=CAST(@0 AS date) ORDER BY id`, [today]);
-    // El esquema académico no registra restricciones por cliente ni cantidades de bonificación.
+    // Bonificación estructurada de 011; los valores nulos no se deducen del texto.
     return { source: 'Promociones académicas ficticias', updatedAt: null,
       promotions: promotions.map(p => ({ ...p, clientCodes: ['*'] })) };
   }

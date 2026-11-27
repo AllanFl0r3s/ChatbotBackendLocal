@@ -1,6 +1,6 @@
 /* Solo lectura. Seleccionar DW_ISTMA academica despues de 004.
    Valores de la semilla; admite el catálogo de vendedores actualizado con 008.
-   Las promociones vigentes dependen de fecha real; las aserciones usan 14/11/2026.
+   Las promociones usan 14/11/2026 como referencia, o 27/11/2026 después de 011.
 */
 SET NOCOUNT ON;
 IF DB_NAME()<>N'DW_ISTMA' THROW 52100,N'Seleccionar DW_ISTMA academica.',1;
@@ -39,7 +39,9 @@ IF COALESCE((SELECT SUM(Cajas) FROM dbo.Proyecciones_TEST WHERE sku=N'PT99000000
  THROW 52108,N'Proyeccion por zona incorrecta.',1;
 IF (SELECT SUM(TOTAL) FROM dbo.ZFI_NOTAS_CREDITO WHERE COD_CLIENTE=N'DEMO001')<>75
  THROW 52109,N'Notas de credito incorrectas.',1;
-IF (SELECT COUNT(*) FROM academico.Promociones WHERE Activa=1 AND CONVERT(date,'20261114') BETWEEN Desde AND Hasta)<>3
+DECLARE @fechaPromoReferencia date=CASE WHEN EXISTS(SELECT 1 FROM dbo.__AcademicMigrations
+ WHERE Version=11 AND Nombre=N'011_cortes_cartera_navidad') THEN CONVERT(date,'20261127') ELSE CONVERT(date,'20261114') END;
+IF (SELECT COUNT(*) FROM academico.Promociones WHERE Activa=1 AND @fechaPromoReferencia BETWEEN Desde AND Hasta)<>3
  THROW 52110,N'Filtro de vigencia incorrecto en la fecha de referencia.',1;
 IF (SELECT SUM(StockTotal) FROM dbo.VWchatbot_STOCK_S4_PRODUCTO)<>497
  THROW 52111,N'Las existencias ya no coinciden con la semilla inicial.',1;

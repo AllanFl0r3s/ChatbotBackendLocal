@@ -1,6 +1,7 @@
 import { withBackHint } from './helpers/back-navigation';
 import { SuggestionsService } from '../suggestions/suggestions.service';
 import { PurchaseHistoryService } from '../suggestions/purchase-history.service';
+import { OperationsService } from '../operations/operations.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -284,8 +285,8 @@ export class ChatService {
     '4) Proyecciones de venta\n' +
     '5) Notas de crédito\n' +
     '6) Promociones\n' +
-    '7) Cartera y vencimientos — pendiente\n' +
-    '8) Ruta y visitas — chat en desarrollo\n' +
+    '7) Cartera y vencimientos\n' +
+    '8) Ruta y visitas · Cortés, zona norte\n' +
     '9) Promociones sugeridas por cliente\n' +
     '10) Historial de compras por cliente';
 
@@ -298,8 +299,8 @@ export class ChatService {
   '4) Proyecciones de venta\n' +
   '5) Notas de crédito\n' +
   '6) Promociones\n' +
-    '7) Cartera y vencimientos — pendiente\n' +
-    '8) Ruta y visitas — chat en desarrollo\n' +
+    '7) Cartera y vencimientos\n' +
+    '8) Ruta y visitas · Cortés, zona norte\n' +
     '9) Promociones sugeridas por cliente\n' +
     '10) Historial de compras por cliente';
 
@@ -313,6 +314,7 @@ export class ChatService {
     private readonly notasCreditoService: NotasCreditoService,
     private readonly suggestionsService: SuggestionsService,
     private readonly purchaseHistoryService: PurchaseHistoryService,
+    private readonly operationsService: OperationsService,
   ) {}
 
   private politeReplies = [
@@ -495,22 +497,16 @@ export class ChatService {
     // Los números de un submenú conservan su significado dentro de ese flujo.
     const context = this.parseSesionContext(sesion);
     // Fuera de los módulos nuevos, atrás vuelve al menú principal.
-    if (/^atr[aá]s$/i.test(raw) && !(context.suggestions?.active || context.purchaseHistory?.active)) {
+    if (/^atr[aá]s$/i.test(raw) && !(context.suggestions?.active || context.purchaseHistory?.active || context.operations?.active)) {
       await this.clearAllContexts(sesion);
       return { reply: this.MENU_PRINCIPAL, nextFlowId: pasoActual.id };
     }
-    const hasFlow = !!(this.getActiveLockedFlow(sesion) || context.suggestions?.active || context.purchaseHistory?.active);
-    if ((!hasFlow && /^[78]$/.test(raw)) || /^(?:opci[oó]n [78]|ruta y visitas|cartera(?: y vencimientos)?)$/i.test(raw)) {
-      await this.clearAllContexts(sesion);
-      return { reply: /^(?:7|opci[oó]n 7|cartera)/i.test(raw) ?
-        'Cartera está pendiente de adaptación a los datos académicos.' :
-        'Ruta y visitas está en desarrollo en el chat. Puedes consultar registros desde la pantalla Visitas.', nextFlowId: 0 };
-    }
+    const hasFlow = !!(this.getActiveLockedFlow(sesion) || context.suggestions?.active || context.purchaseHistory?.active || context.operations?.active);
     for (const [key, service] of [
-      ['suggestions', this.suggestionsService], ['purchaseHistory', this.purchaseHistoryService],
+      ['suggestions', this.suggestionsService], ['purchaseHistory', this.purchaseHistoryService], ['operations', this.operationsService],
     ] as const) {
       if (/^\d+$/.test(raw) && hasFlow && !context[key]?.active) continue;
-      if ((context.suggestions?.active || context.purchaseHistory?.active) && !context[key]?.active) continue;
+      if ((context.suggestions?.active || context.purchaseHistory?.active || context.operations?.active) && !context[key]?.active) continue;
       const result = await service.handle(sesion.idUsuario!, raw, context[key]);
       if (!result) continue;
       sesion.contexto = JSON.stringify({ [key]: result.context });
@@ -5625,6 +5621,7 @@ if (ctx.source === 'VENTAS_CATEGORIA') {
   }
 
   private async clearAllContexts(sesion: Sesion): Promise<void> {
+  await this.writeSesionContext(sesion, 'operations', null);
   await this.writeSesionContext(sesion, 'suggestions', null);
   await this.writeSesionContext(sesion, 'purchaseHistory', null);
   await this.writePronosticoCtx(sesion, {});

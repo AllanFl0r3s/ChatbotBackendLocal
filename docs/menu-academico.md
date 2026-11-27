@@ -1,4 +1,10 @@
-# Las seis opciones del menú — datos académicos
+# Menú del chatbot con datos académicos
+
+## Actualización del 27 de noviembre de 2026
+
+Las opciones 7 y 8 ya están implementadas. Ver `docs/cortes-cartera-navidad.md` para cartera por ruta, visitas en sectores de Cortés y la promoción ficticia navideña de agua 6+1. Requiere la migración DW_ISTMA 011 y el backend actualizado. Los apartados siguientes conservan la descripción del avance anterior.
+
+## Avance del 14 de noviembre de 2026
 
 Actualización: 14 de noviembre de 2026. Implementado y probado localmente. La migración 004 también se aplicó en DW_ISTMA de Azure y se verificaron las vistas con el usuario limitado chatbot_web. **El código nuevo aún no está publicado en Render/Vercel:** la verificación SQL de Azure no sustituye la prueba HTTP posterior al despliegue.
 

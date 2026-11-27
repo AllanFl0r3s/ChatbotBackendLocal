@@ -48,7 +48,8 @@ describe('Chat: navegación numérica sin clasificador externo', () => {
     const inventory = new InventoryService({} as any, { query } as any);
     const moderation = { isAllowedText: jest.fn().mockRejectedValue(new Error('Moderación externa inesperada')) };
     service = new ChatService(sessions as any, messages as any, ai, moderation as any, inventory, {} as any, {} as any,
-      { handle: jest.fn().mockResolvedValue(null) } as any, { handle: jest.fn().mockResolvedValue(null) } as any);
+      { handle: jest.fn().mockResolvedValue(null) } as any, { handle: jest.fn().mockResolvedValue(null) } as any,
+      { handle: jest.fn().mockResolvedValue(null) } as any);
   });
 
   it.each(['1', 'opcion 1', 'opción 1', '1) Stock'])('menu → %s pide un producto sin usar OpenAI', async (option) => {

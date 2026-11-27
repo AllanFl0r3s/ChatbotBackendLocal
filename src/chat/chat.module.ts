@@ -6,6 +6,8 @@ import { AcademicRouteService } from '../suggestions/academic-route.service';
 import { PurchaseHistoryService } from '../suggestions/purchase-history.service';
 import { PurchaseHistoryRepository } from '../suggestions/purchase-history.repository';
 import { Module } from '@nestjs/common';
+import { OperationsRepository } from '../operations/operations.repository';
+import { OperationsService } from '../operations/operations.service';
 import { RouteAccessModule } from '../route-access/route-access.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatController } from './chat.controller';
@@ -30,6 +32,7 @@ import { NotasCreditoService } from './notas-credito.service';
   ],
   controllers: [ChatController],
   providers: [
+    OperationsRepository, OperationsService,
     ChatService,
     OpenAiService,
     ModerationService,

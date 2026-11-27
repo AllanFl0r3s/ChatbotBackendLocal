@@ -31,11 +31,11 @@ try{
  ['promociones SQL',['9','DEMO001','1'],/DEMO-PROMO-/],
  ['promociones habituales',['9','DEMO001','2'],/DEMO-PROMO-/],
  ['promociones con stock',['9','DEMO001','3'],/Stock reportado/],
- ['bonificación sin datos',['9','DEMO001','4'],/no tienen cantidades/],
+ ['bonificación navideña 6+1',['9','DEMO001','4'],/Compra 6 botellas y recibe 1 botella/],
  ['promociones por vencer',['9','DEMO001','5','15 días'],/DEMO-PROMO-/],
  ['mensaje sin enviar',['9','DEMO001','6','1'],/Mensaje preparado/],
- ['opción 8 pendiente',['8'],/en desarrollo/],
- ['opción 7 pendiente',['7'],/pendiente/],
+ ['opción 8 ruta Cortés',['8'],/Cortés.*Zona NORTE/],
+ ['opción 7 cartera',['7'],/Cartera y vencimientos/],
  ];
  for(const[name,messages,pattern]of cases){await chat('volver al menú principal');let reply;for(const message of messages)reply=await chat(message);assert.match(reply,pattern,name);passed++;console.log('PASS '+name);}
  const logout=await api('/auth/logout',{});assert.ok([200,201,204].includes(logout.status));passed++;console.log(JSON.stringify({passed,source:'SQL académico local',commercialWrites:0}));

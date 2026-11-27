@@ -49,6 +49,7 @@ export function rankPromotions(promotions: Promotion[], facts: ProductFacts[], a
   const products = new Map(facts.map(p => [p.sku, p]));
   return promotions.map(p => ({ ...p, facts: products.get(p.sku) }))
     .filter(p => (![2, 3].includes(action) || (p.facts?.purchases ?? 0) > 0) &&
+      (action !== 4 || ((p.buyQuantity ?? 0)>0 && (p.bonusQuantity ?? 0)>0)) &&
       (action !== 3 || (p.facts?.stock ?? 0) > 0) && (action !== 5 || (!!until && p.endsOn <= until)))
     .sort((a, b) => (b.facts?.purchases ?? 0) - (a.facts?.purchases ?? 0) ||
       a.endsOn.localeCompare(b.endsOn) || a.id.localeCompare(b.id));

@@ -81,10 +81,10 @@ const cases = [
     [/Zona: NORTE/, /Cajas a vender: 15/],
   ],
   ['proyección sin registros', ['4', '1', 'PT990000001', 'enero 2025'], [/No encontré proyección/]],
-  ['clientes con notas', ['5', '1'], [/DEMO001/, /75\.00/, /DEMO002/, /40\.00/]],
+  ['clientes con notas', ['5', '1'], [/CLI-038/, /75\.00/, /CLI-039/, /40\.00/]],
   [
     'notas de un cliente',
-    ['5', '2', 'DEMO001'],
+    ['5', '2', 'CLI-038'],
     [/NC-DEMO-001/, /NC-DEMO-002/, /50\.00/, /25\.00/],
   ],
   ['cliente sin notas', ['5', '2', 'CLIENTE_INEXISTENTE'], [/No encontré notas/]],

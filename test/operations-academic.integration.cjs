@@ -31,21 +31,23 @@ const username='ops.test.'+randomUUID().slice(0,8),password=randomUUID()+'!';
   const cases=[
    ['menú sin pendientes',['menu'],/8\) Ruta y visitas · Cortés, zona norte/],
    ['ruta y sector de Cortés',['8'],/San Pedro Sula, Cortés · Zona NORTE/],
-   ['clientes de mi ruta',['8','1'],/CORT-S01-01[\s\S]*CORT-S01-02/],
+   ['clientes de mi ruta',['8','1'],/CLI-001[\s\S]*CLI-002/],
    ['visitas por fecha y cliente distinto',['8','2','2026-11-27'],/Mostrando 1 a 1 de 1[\s\S]*Registros de visita: 2/],
-   ['clientes sin registro',['8','3','2026-11-27'],/CORT-S01-02/],
+   ['clientes sin registro',['8','3','2026-11-27'],/CLI-002/],
    ['fecha imposible',['8','2','2026-02-30'],/fecha no es válida/],
    ['fecha futura',['8','2','2099-01-01'],/fecha no es válida/],
    ['atrás vuelve al submenú',['8','2','atrás'],/1\) Clientes de mi ruta/],
    ['paginación de clientes agotada',['8','1','más'],/No hay más resultados/],
-   ['resumen de cartera',['7','1'],/Saldo pendiente: L 1,300\.00/],
+   ['resumen de cartera',['7','1'],/Saldo pendiente: L 3,200\.00/],
+   ['ayuda con pulperías de la base',['7','3'],/CLI-001 — Pulpería La Bendición[\s\S]*CLI-005/],
    ['documentos vencidos',['7','2'],/FAC-DEMO-CORT-S01-01[\s\S]*L 800\.00/],
-   ['cartera por cliente',['7','3','CORT-S01-01'],/L 800\.00/],
-   ['cliente de otra ruta sin exposición de saldos',['7','3','CORT-S02-01'],/No hay documentos con saldo/],
+   ['cartera por cliente',['7','3','CLI-001'],/L 800\.00/],
+   ['pulpería pagada sin documentos pendientes',['7','3','CLI-005'],/No hay documentos con saldo/],
+   ['cliente de otra ruta sin exposición de saldos',['7','3','CLI-006'],/No hay documentos con saldo/],
    ['vencimientos próximos',['7','4'],/FAC-DEMO-CORT-S01-02/],
-   ['cliente con caracteres SQL rechazado',['7','3',"CORT-S01-01' OR 1=1"],/código válido/],
+   ['cliente con caracteres SQL rechazado',['7','3',"CLI-001' OR 1=1"],/código válido/],
    ['promoción general navideña',['6'],/Promo navideña DEMO 6\+1/],
-   ['bonificación estructurada',['9','CORT-S01-01','4'],/Compra 6 botellas y recibe 1 botella/],
+   ['bonificación estructurada',['9','CLI-001','4'],/Compra 6 botellas y recibe 1 botella/],
    ['salir de cartera',['7','5'],/10\) Historial/],
    ['salir de ruta',['8','5'],/10\) Historial/],
   ];
@@ -57,6 +59,15 @@ const username='ops.test.'+randomUUID().slice(0,8),password=randomUUID()+'!';
   await chat('menu');await chat('8');
   assert.equal((await api('PATCH','/users/'+userId,{rutaCodigo:null},adminToken)).status,200);
   assert.match(await chat('1'),/No tienes permiso/);passed++;console.log('PASS revocación durante ruta');
+  for(let number=1;number<=10;number++){
+   const route='S'+String(number).padStart(2,'0');
+   assert.equal((await api('PATCH','/users/'+userId,{rutaCodigo:route},adminToken)).status,200);
+   await chat('menu');await chat('8');const clients=await chat('1');
+   assert.match(clients,/Mostrando 1 a 5 de 5/);
+   for(let position=1;position<=5;position++)assert.ok(clients.includes('CLI-'+String((number-1)*5+position).padStart(3,'0')));
+   await chat('menu');await chat('7');assert.match(await chat('1'),/Saldo pendiente: L 3,200\.00/);
+   passed++;console.log('PASS cinco pulperías y cartera autorizada '+route);
+  }
   const repo=app.get(SuggestionsRepository);
   const start=await repo.catalog('2026-11-27'),end=await repo.catalog('2026-12-31'),expired=await repo.catalog('2027-01-01');
   assert.equal(start.promotions.find(p=>p.sku==='PT990000001').buyQuantity,6);

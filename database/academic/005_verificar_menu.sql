@@ -37,7 +37,9 @@ IF @soloNorte=1 AND EXISTS(SELECT 1 FROM academico.Proyecciones WHERE Zona<>N'NO
  THROW 52113,N'Solo debe existir zona NORTE después de 009.',1;
 IF COALESCE((SELECT SUM(Cajas) FROM dbo.Proyecciones_TEST WHERE sku=N'PT990000001' AND Zona=N'NORTE' AND mes=11 AND anio=2026),0)<>CASE WHEN @soloNorte=1 THEN 15 ELSE 10 END
  THROW 52108,N'Proyeccion por zona incorrecta.',1;
-IF (SELECT SUM(TOTAL) FROM dbo.ZFI_NOTAS_CREDITO WHERE COD_CLIENTE=N'DEMO001')<>75
+DECLARE @clienteNotas nvarchar(20)=CASE WHEN EXISTS(SELECT 1 FROM dbo.__AcademicMigrations
+ WHERE Version=13 AND Nombre=N'013_cincuenta_pulperias') THEN N'CLI-038' ELSE N'DEMO001' END;
+IF COALESCE((SELECT SUM(TOTAL) FROM dbo.ZFI_NOTAS_CREDITO WHERE COD_CLIENTE=@clienteNotas),0)<>75
  THROW 52109,N'Notas de credito incorrectas.',1;
 DECLARE @fechaPromoReferencia date=CASE WHEN EXISTS(SELECT 1 FROM dbo.__AcademicMigrations
  WHERE Version=11 AND Nombre=N'011_cortes_cartera_navidad') THEN CONVERT(date,'20261127') ELSE CONVERT(date,'20261114') END;

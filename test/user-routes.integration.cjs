@@ -51,7 +51,7 @@ let passed = 0;
     });
     await check('el chatbot usa la ruta guardada para historial', async () => {
       await api('POST', '/chat/message', { message: 'menu' }, userToken);
-      const reply = await api('POST', '/chat/message', { message: '¿Cuándo fue la última compra del cliente DEMO001?' }, userToken);
+      const reply = await api('POST', '/chat/message', { message: '¿Cuándo fue la última compra del cliente CLI-038?' }, userToken);
       assert.equal(reply.status, 201); assert.match(reply.data.reply, /Registro: DEMO-VENTA-/);
     });
     await check('la reasignación a S09 cambia permisos sin volver a iniciar sesión', async () => {

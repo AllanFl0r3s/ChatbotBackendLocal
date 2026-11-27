@@ -50,7 +50,12 @@ export class OperationsService {
       ctx.page=(ctx.page??0)+1;
     }
     if (module==='wallet' && ctx.action===3 && !ctx.client) {
-      if (/^[1-4]$/.test(t)) return {reply:`Escribe el código del cliente, por ejemplo CORT-${route}-01. Solo se consultan clientes de tu ruta.`,context:ctx};
+      if (/^[1-4]$/.test(t)) {
+        const clients=await this.repo.clients(route,today,0,'all');
+        const examples=clients.map((client:any)=>`${client.Codigo} — ${client.Nombre}`).join('\n');
+        return {reply:(examples?`Clientes de tu ruta:\n${examples}\n\n`:'')+
+          'Escribe el código del cliente. Solo se consultan clientes de tu ruta.',context:ctx};
+      }
       if (!/^[a-z0-9-]{3,20}$/i.test(text.trim())) return {reply:'Escribe un código válido de cliente, sin espacios.',context:ctx};
       ctx.client=text.trim().toUpperCase();
     }

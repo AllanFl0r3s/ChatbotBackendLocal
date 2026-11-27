@@ -1,5 +1,9 @@
 # Cartera rutas de Cortés y promoción navideña
 
+## Actualización de pulperías del 27 de noviembre de 2026
+
+La migración 013 amplía esta muestra a cincuenta pulperías, cinco por vendedor, con códigos CLI-001 a CLI-050 y saldo pendiente L 3200 por ruta. Ver `docs/pulperias-cartera.md` para los códigos y recorridos actuales. Los apartados siguientes describen la preparación anterior de 011 y sus códigos CORT y DEMO, que cambian después de 013.
+
 Las opciones 7 y 8 del chatbot están implementadas con datos ficticios. Usan la ruta asignada a la cuenta desde Administración; el servidor vuelve a comprobar ese permiso en cada mensaje, incluidas paginación, cartera por cliente y consultas de visita. No hay acceso automático a otras rutas para el administrador.
 
 ## Rutas de demostración

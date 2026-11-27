@@ -9,6 +9,7 @@ describe('Cartera y rutas de Cortés',()=>{
     jest.clearAllMocks(); jest.useFakeTimers().setSystemTime(new Date('2026-11-27T18:00:00Z'));
     resolve.mockResolvedValue('S01');
     repo.territory.mockResolvedValue({Municipio:'San Pedro Sula',Departamento:'Cortés',Zona:'NORTE'});
+    repo.clients.mockResolvedValue([]);
     service=new OperationsService({resolve} as any,repo as any);
   });
   afterEach(()=>jest.useRealTimers());
@@ -72,5 +73,13 @@ describe('Cartera y rutas de Cortés',()=>{
     repo.clients.mockResolvedValue([]);
     await service.handle(1,'2026-11-27',pending!.context!);
     expect(repo.clients).toHaveBeenCalledWith('S01','2026-11-27',0,'visited');
+  });
+  it('la ayuda de cartera utiliza nombres y códigos de la base para la ruta autorizada',async()=>{
+    const entry=await service.handle(1,'7');
+    repo.clients.mockResolvedValue([{Codigo:'CLI-001',Nombre:'Pulpería La Bendición'}]);
+    const prompt=await service.handle(1,'3',entry!.context!);
+    expect(prompt?.reply).toContain('CLI-001 — Pulpería La Bendición');
+    expect(prompt?.reply).not.toContain('CORT-S');
+    expect(repo.clients).toHaveBeenCalledWith('S01','2026-11-27',0,'all');
   });
 });
